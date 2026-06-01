@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connect & Explore | My Links</title>
+  <link rel="stylesheet" href="/styles.css">
+  <!-- FontAwesome for fallback styling just in case -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="tree-container">
+    
+    <!-- Profile Header -->
+    <header class="profile-card">
+      <div class="profile-avatar">
+        <!-- Sleek local profile picture -->
+        <img src="/avatar.png" alt="Avatar" id="profile-img">
+      </div>
+      <h1 class="profile-name" id="profile-title">Quick Tasks & Social Hub</h1>
+      <p class="profile-bio" id="profile-desc">Welcome! Click any link below to instantly access my micro-jobs, active tasks, channels, and portals.</p>
+    </header>
+
+    <!-- Dynamic Links Section -->
+    <main class="links-list" id="links-container">
+      <!-- Loading skeletons (replaced by JS) -->
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card" style="animation-delay: 0.2s"></div>
+      <div class="skeleton-card" style="animation-delay: 0.4s"></div>
+    </main>
+
+    <!-- Social Bottom Icons -->
+    <footer class="social-row">
+      <a href="#" class="social-icon-btn" title="Telegram" id="footer-tg" style="display: none;"><i class="fab fa-telegram"></i></a>
+      <a href="#" class="social-icon-btn" title="WhatsApp" id="footer-wa" style="display: none;"><i class="fab fa-whatsapp"></i></a>
+      <a href="#" class="social-icon-btn" title="YouTube" id="footer-yt" style="display: none;"><i class="fab fa-youtube"></i></a>
+      <a href="/admin" class="social-icon-btn" title="Manage Dashboard" style="opacity: 0.5;"><i class="fa-solid fa-gear"></i></a>
+    </footer>
+
+  </div>
+
+  <script>
+    // Platform-to-Icon mapper
+    function getPlatformIcon(slug, url) {
+      const lowerUrl = url.toLowerCase();
+      const lowerSlug = slug.toLowerCase();
+      
+      // Check slug/URL terms for matching SVG icon
+      if (lowerSlug.includes('telegram') || lowerSlug.includes('tg') || lowerUrl.includes('t.me') || lowerUrl.includes('telegram')) {
+        return '<i class="fab fa-telegram" style="color: #0088cc;"></i>';
+      }
+      if (lowerSlug.includes('whatsapp') || lowerSlug.includes('wa') || lowerUrl.includes('wa.me') || lowerUrl.includes('whatsapp')) {
+        return '<i class="fab fa-whatsapp" style="color: #25d366;"></i>';
+      }
+      if (lowerSlug.includes('youtube') || lowerSlug.includes('yt') || lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+        return '<i class="fab fa-youtube" style="color: #ff0000;"></i>';
+      }
+      if (lowerSlug.includes('fiverr') || lowerUrl.includes('fiverr.com')) {
+        return '<i class="fa-solid fa-briefcase" style="color: #1dbf73;"></i>';
+      }
+      if (lowerSlug.includes('upwork') || lowerUrl.includes('upwork.com')) {
+        return '<i class="fa-solid fa-briefcase" style="color: #14a800;"></i>';
+      }
+      if (lowerSlug.includes('twitter') || lowerSlug.includes('x') || lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
+        return '<i class="fab fa-twitter" style="color: #1da1f2;"></i>';
+      }
+      if (lowerSlug.includes('instagram') || lowerSlug.includes('ig') || lowerUrl.includes('instagram.com')) {
+        return '<i class="fab fa-instagram" style="color: #e1306c;"></i>';
+      }
+      if (lowerSlug.includes('github') || lowerUrl.includes('github.com')) {
+        return '<i class="fab fa-github" style="color: #f0f6fc;"></i>';
+      }
+      
+      // Default fallback web icon
+      return '<i class="fa-solid fa-link" style="color: #6366f1;"></i>';
+    }
+
+    // Fetch active links from Serverless API
+    async function loadLinks() {
+      const container = document.getElementById('links-container');
+      try {
+        const response = await fetch('/api/links');
+        if (!response.ok) throw new Error('Failed to retrieve links');
+        
+        const data = await response.json();
+        const links = data.links || [];
+
+        // Clear skeletons
+        container.innerHTML = '';
+
+        if (links.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon"><i class="fa-regular fa-folder-open"></i></div>
+              <p>No active links available right now.</p>
+              <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.6">Visit /admin to add new redirect routes!</p>
+            </div>
+          `;
+          return;
+        }
+
+        // 1. Identify which link should be mapped to each social footer slot
+        let footerTgLink = null;
+        let footerWaLink = null;
+        let footerYtLink = null;
+
+        // Group matches for Telegram, WhatsApp, and YouTube
+        const tgLinks = [];
+        const waLinks = [];
+        const ytLinks = [];
+
+        links.forEach(link => {
+          const destLower = link.destination_url.toLowerCase();
+          const slugLower = link.slug.toLowerCase();
+
+          if (slugLower === 'telegram' || slugLower === 'tg' || destLower.includes('t.me/')) {
+            tgLinks.push(link);
+          }
+          if (slugLower === 'whatsapp' || slugLower === 'wa' || destLower.includes('wa.me/')) {
+            waLinks.push(link);
+          }
+          if (slugLower === 'youtube' || slugLower === 'yt' || destLower.includes('youtube.com/') || destLower.includes('youtu.be/')) {
+            ytLinks.push(link);
+          }
+        });
+
+        // Resolve Telegram footer slot: prioritize is_footer pin, then fallback to first link
+        if (tgLinks.length > 0) {
+          const pinned = tgLinks.find(l => l.is_footer);
+          footerTgLink = pinned || tgLinks[0];
+        }
+
+        // Resolve WhatsApp footer slot: prioritize is_footer pin, then fallback to first link
+        if (waLinks.length > 0) {
+          const pinned = waLinks.find(l => l.is_footer);
+          footerWaLink = pinned || waLinks[0];
+        }
+
+        // Resolve YouTube footer slot: prioritize is_footer pin, then fallback to first link
+        if (ytLinks.length > 0) {
+          const pinned = ytLinks.find(l => l.is_footer);
+          footerYtLink = pinned || ytLinks[0];
+        }
+
+        // 2. Render footer social links if mapped
+        if (footerTgLink) {
+          const el = document.getElementById('footer-tg');
+          el.href = `/${footerTgLink.slug}`;
+          el.style.display = 'flex';
+        } else {
+          document.getElementById('footer-tg').style.display = 'none';
+        }
+
+        if (footerWaLink) {
+          const el = document.getElementById('footer-wa');
+          el.href = `/${footerWaLink.slug}`;
+          el.style.display = 'flex';
+        } else {
+          document.getElementById('footer-wa').style.display = 'none';
+        }
+
+        if (footerYtLink) {
+          const el = document.getElementById('footer-yt');
+          el.href = `/${footerYtLink.slug}`;
+          el.style.display = 'flex';
+        } else {
+          document.getElementById('footer-yt').style.display = 'none';
+        }
+
+        // 3. Loop and render Linktree Cards
+        links.forEach((link, index) => {
+          // Skip the core system root 'active_link' setting from displaying as a main card
+          if (link.slug === 'active_link') {
+            return;
+          }
+
+          const card = document.createElement('a');
+          card.href = `/${link.slug}`;
+          card.className = 'link-card';
+          card.style.animationDelay = `${index * 0.08}s`;
+          
+          // Format slug title
+          const title = link.slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+          const icon = getPlatformIcon(link.slug, link.destination_url);
+
+          card.innerHTML = `
+            <div class="link-card-left">
+              <span class="link-icon">${icon}</span>
+              <div class="link-text-content">
+                <span class="link-title">${title}</span>
+                ${link.description ? `<p class="link-description">${link.description}</p>` : ''}
+              </div>
+            </div>
+            <div class="link-card-right">
+              <button class="card-copy-btn" onclick="copyCardUrl(event, '${link.slug}')" title="Copy Redirect Link">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+              <span class="link-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+            </div>
+          `;
+          
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `
+          <div class="alert alert-error">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Unable to load links. Please try again later.</span>
+          </div>
+        `;
+      }
+    }
+
+    // Copy URL helper on landing page
+    function copyCardUrl(e, slug) {
+      e.preventDefault(); // Stop main redirect link click
+      e.stopPropagation(); // Stop click event propagation
+      
+      const button = e.currentTarget;
+      const originalHtml = button.innerHTML;
+      const fullUrl = `${window.location.origin}/${slug}`;
+      
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        button.classList.add('copied');
+        button.innerHTML = '<i class="fa-solid fa-check"></i>';
+        
+        setTimeout(() => {
+          button.classList.remove('copied');
+          button.innerHTML = originalHtml;
+        }, 1500);
+      }).catch(err => {
+        console.error('Clipboard copy failed:', err);
+      });
+    }
+
+    // Initialize Page
+    document.addEventListener('DOMContentLoaded', loadLinks);
+  </script>
+</body>
+</html>

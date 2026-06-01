@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Redirect Manager</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- 🔒 Password Protection Overlay Modal -->
+  <div class="modal-overlay" id="auth-modal" style="display: none;">
+    <div class="modal-content">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <i class="fa-solid fa-lock" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0.8rem;"></i>
+        <h2 style="font-weight: 700; font-size: 1.4rem;">Admin Verification</h2>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin-top: 0.25rem;">Enter your password to manage redirects.</p>
+      </div>
+      
+      <div id="auth-error-container"></div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label class="form-label" for="auth-password">Admin Password / Access Token</label>
+          <input type="password" id="auth-password" class="form-input" placeholder="••••••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem;">
+          <i class="fa-solid fa-right-to-bracket"></i> Authenticate
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 📊 Main Dashboard Interface -->
+  <div class="admin-container">
+    
+    <!-- Header Row -->
+    <header class="admin-header">
+      <div>
+        <h1 class="admin-title"><i class="fa-solid fa-chart-line" style="color: var(--primary)"></i> Link Manager</h1>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;">
+          Create, edit, and audit your micro-job bridge redirects globally.
+        </p>
+      </div>
+      <div style="display: flex; gap: 0.8rem;">
+        <a href="/" class="btn btn-secondary" target="_blank"><i class="fa-solid fa-eye"></i> View Landing Page</a>
+        <button class="btn btn-secondary" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+      </div>
+    </header>
+
+    <!-- Database Info & Auto-Setup Panel -->
+    <div class="panel" style="background: rgba(99, 102, 241, 0.04); border-color: rgba(99, 102, 241, 0.15); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.2rem 1.8rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fa-solid fa-database" style="color: var(--primary); font-size: 1.4rem;"></i>
+        <div>
+          <span style="font-weight: 600; font-size: 0.95rem; display: block;">Database Connection Status</span>
+          <span id="db-status-badge" class="slug-badge" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: var(--error); margin-top: 0.2rem; display: inline-block; padding: 0.15rem 0.5rem; font-size: 0.75rem;">Checking...</span>
+        </div>
+      </div>
+      <div id="db-setup-container" style="display: none;">
+        <button class="btn btn-primary" onclick="triggerDbSetup()" style="font-size: 0.8rem; padding: 0.5rem 1rem;"><i class="fa-solid fa-wrench"></i> Quick Initialize DB Table</button>
+      </div>
+    </div>
+
+    <!-- Alert Messaging Portal -->
+    <div id="alert-portal"></div>
+
+    <!-- Two Column Dashboard Layout -->
+    <div class="dash-grid">
+      
+      <!-- Column 1: Add/Edit Form -->
+      <section class="panel">
+        <h2 class="panel-title" id="form-panel-title"><i class="fa-solid fa-plus-circle" style="color: var(--primary)"></i> Create Bridge Redirect</h2>
+        
+        <form id="redirect-form" onsubmit="handleFormSubmit(event)">
+          <input type="hidden" id="edit-mode" value="false">
+
+          <div class="form-group">
+            <label class="form-label" for="slug-input">URL Slug (e.g. "task1")</label>
+            <input type="text" id="slug-input" class="form-input" placeholder="my-job-path" required>
+            <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 0.4rem;">
+              Visiting <span style="font-family: monospace; color: var(--text-secondary)">yourdomain.com/<span id="live-slug-preview">slug</span></span> will instantly redirect.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="url-input">Destination Destination URL</label>
+            <input type="url" id="url-input" class="form-input" placeholder="https://example.com/job-id-998" required>
+            <p style="color: var(--text-muted); font-size: 0.78rem; margin-top: 0.4rem;">
+              Must start with <span style="font-family: monospace;">https://</span> or <span style="font-family: monospace;">http://</span>.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="desc-input">Link Description (e.g. "Earn $10, join the task!")</label>
+            <input type="text" id="desc-input" class="form-input" placeholder="Enter a helpful description about this link (optional)">
+          </div>
+
+          <div class="form-group checkbox-group" style="display: flex; align-items: center; gap: 0.6rem; margin-top: 1rem;">
+            <input type="checkbox" id="footer-input" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+            <label class="form-label" for="footer-input" style="margin-bottom: 0; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;">
+              <i class="fa-solid fa-thumbtack" style="color: var(--primary); font-size: 0.85rem;"></i>
+              <span>Pin as Default Social Footer Link</span>
+            </label>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;" id="submit-btn"><i class="fa-solid fa-save"></i> Save Redirect</button>
+            <button type="button" class="btn btn-secondary" style="display: none;" id="cancel-edit-btn" onclick="resetForm()"><i class="fa-solid fa-times"></i> Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Column 2: Active Redirects Table -->
+      <section class="panel" style="min-height: 380px;">
+        <h2 class="panel-title"><i class="fa-solid fa-list-ul" style="color: var(--primary)"></i> Active Redirect Slugs</h2>
+        
+        <div class="table-responsive">
+          <table class="link-table">
+            <thead>
+              <tr>
+                <th>Slug Path</th>
+                <th>Destination Target URL</th>
+                <th>Storage</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="links-tbody">
+              <!-- JS-loaded table rows -->
+              <tr>
+                <td colspan="4" class="empty-state">
+                  <div class="empty-icon"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                  <p>Loading redirects list...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+  <script>
+    // App Constants
+    let activeLinks = [];
+
+    // Core Init checks
+    document.addEventListener('DOMContentLoaded', () => {
+      // Live text slug preview
+      document.getElementById('slug-input').addEventListener('input', (e) => {
+        const preview = document.getElementById('live-slug-preview');
+        const clean = e.target.value.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+        preview.textContent = clean || 'slug';
+      });
+
+      checkAuthentication();
+    });
+
+    // Helper: Retrieve saved authorization token
+    function getAuthToken() {
+      return localStorage.getItem('admin_token') || '';
+    }
+
+    // Helper: Set alert banner
+    function showAlert(message, type = 'success') {
+      const portal = document.getElementById('alert-portal');
+      portal.innerHTML = `
+        <div class="alert alert-${type}">
+          <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-triangle-exclamation'}"></i>
+          <span>${message}</span>
+        </div>
+      `;
+      // Auto dismiss success alerts after 4s
+      if (type === 'success') {
+        setTimeout(() => { portal.innerHTML = ''; }, 4000);
+      }
+    }
+
+    // Auth Control check
+    function checkAuthentication() {
+      const token = getAuthToken();
+      if (!token) {
+        document.getElementById('auth-modal').style.display = 'flex';
+      } else {
+        document.getElementById('auth-modal').style.display = 'none';
+        loadLinks();
+      }
+    }
+
+    // Login Form Submit
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('auth-password').value.trim();
+      localStorage.setItem('admin_token', pwd);
+      checkAuthentication();
+    }
+
+    // Logout Helper
+    function logout() {
+      localStorage.removeItem('admin_token');
+      location.reload();
+    }
+
+    // Load active redirects list
+    async function loadLinks() {
+      const tbody = document.getElementById('links-tbody');
+      const token = getAuthToken();
+
+      try {
+        const response = await fetch('/api/links');
+        const data = await response.json();
+        
+        // Update database connection indicator
+        const dbStatusBadge = document.getElementById('db-status-badge');
+        const dbSetupContainer = document.getElementById('db-setup-container');
+        
+        if (data.db_active) {
+          dbStatusBadge.textContent = 'Active (PostgreSQL Connected)';
+          dbStatusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+          dbStatusBadge.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+          dbStatusBadge.style.color = 'var(--success)';
+          dbSetupContainer.style.display = 'none';
+        } else {
+          dbStatusBadge.textContent = 'Local Fallback (Env Variable Mode)';
+          dbStatusBadge.style.background = 'rgba(245, 158, 11, 0.1)';
+          dbStatusBadge.style.borderColor = 'rgba(245, 158, 11, 0.2)';
+          dbStatusBadge.style.color = '#f59e0b';
+          dbSetupContainer.style.display = 'block'; // Show "Quick Init DB" button!
+        }
+
+        activeLinks = data.links || [];
+        tbody.innerHTML = '';
+
+        if (activeLinks.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" class="empty-state">
+                <div class="empty-icon"><i class="fa-regular fa-folder-open"></i></div>
+                <p>No redirects available. Create one to get started!</p>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        activeLinks.forEach((link) => {
+          const row = document.createElement('tr');
+          const isEnv = link.is_env;
+
+          row.innerHTML = `
+            <td>
+              <span class="slug-badge">${link.slug}</span>
+              ${link.is_footer ? `<span style="font-size: 0.7rem; background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 0.15rem 0.35rem; border-radius: 4px; margin-left: 0.4rem; display: inline-flex; align-items: center; gap: 0.2rem;"><i class="fa-solid fa-thumbtack"></i> Pinned</span>` : ''}
+            </td>
+            <td style="max-width: 250px;">
+              <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <a href="${link.destination_url}" target="_blank" style="color: var(--text-secondary); text-decoration: none; border-bottom: 1px dashed rgba(255,255,255,0.2)">${link.destination_url}</a>
+              </div>
+              ${link.description ? `<p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; opacity: 0.85;">"${link.description}"</p>` : ''}
+            </td>
+            <td>
+              <span style="font-size: 0.8rem; color: ${isEnv ? '#f59e0b' : 'var(--success)'}">
+                ${isEnv ? '<i class="fa-solid fa-code"></i> Env File' : '<i class="fa-solid fa-database"></i> Database'}
+              </span>
+            </td>
+            <td>
+              <div class="cell-actions">
+                <button class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" onclick="copyRedirectLink('${link.slug}')" title="Copy Redirect Link">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <button class="btn btn-secondary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" onclick="populateEdit('${link.slug}')" ${isEnv ? 'disabled style="opacity: 0.4"' : ''} title="Edit Record">
+                  <i class="fa-solid fa-edit"></i>
+                </button>
+                <button class="btn btn-danger" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;" onclick="deleteLink('${link.slug}')" ${isEnv ? 'disabled style="opacity: 0.4"' : ''} title="Delete Record">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          `;
+
+          tbody.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-state" style="color: var(--error)">
+              <div class="empty-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+              <p>Authentication Required or Server Unavailable.</p>
+              <button class="btn btn-secondary" onclick="logout()" style="margin-top: 1rem;">Reset Password Token</button>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    // Helper: Copy redirect bridge link to clipboard
+    function copyRedirectLink(slug) {
+      const hostname = window.location.origin;
+      const fullUrl = `${hostname}/${slug}`;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        showAlert(`Copied to clipboard: <strong>${fullUrl}</strong>`, 'success');
+      }).catch(err => {
+        console.error('Copy failed:', err);
+      });
+    }
+
+    // Quick Database Creator Call
+    async function triggerDbSetup() {
+      const token = getAuthToken();
+      try {
+        const response = await fetch(`/api/setup?password=${encodeURIComponent(token)}`);
+        const data = await response.json();
+        
+        if (response.status === 401) {
+          localStorage.removeItem('admin_token');
+          document.getElementById('auth-error-container').innerHTML = `
+            <div class="alert alert-error" style="margin-bottom: 1rem; font-size: 0.82rem;">
+              <i class="fa-solid fa-circle-exclamation"></i> Authentication failed. Invalid access token.
+            </div>
+          `;
+          document.getElementById('auth-modal').style.display = 'flex';
+          return;
+        }
+
+        if (response.ok && data.success) {
+          showAlert(data.message, 'success');
+          loadLinks();
+        } else {
+          throw new Error(data.error || 'Setup failed');
+        }
+      } catch (err) {
+        showAlert(`Database DDL execution failed: ${err.message}`, 'error');
+      }
+    }
+
+    // Populate record to editor form
+    function populateEdit(slug) {
+      const link = activeLinks.find(l => l.slug === slug);
+      if (!link) return;
+
+      document.getElementById('edit-mode').value = 'true';
+      document.getElementById('form-panel-title').innerHTML = `<i class="fa-solid fa-edit" style="color: var(--accent)"></i> Edit Bridge Redirect`;
+      
+      const slugInput = document.getElementById('slug-input');
+      slugInput.value = link.slug;
+      slugInput.disabled = true; // Slug name cannot be changed (create new one if needed)
+
+      document.getElementById('url-input').value = link.destination_url;
+      document.getElementById('desc-input').value = link.description || '';
+      document.getElementById('footer-input').checked = !!link.is_footer;
+      document.getElementById('submit-btn').innerHTML = `<i class="fa-solid fa-save"></i> Update Redirect`;
+      document.getElementById('cancel-edit-btn').style.display = 'inline-flex';
+    }
+
+    // Reset Form
+    function resetForm() {
+      document.getElementById('edit-mode').value = 'false';
+      document.getElementById('form-panel-title').innerHTML = `<i class="fa-solid fa-plus-circle" style="color: var(--primary)"></i> Create Bridge Redirect`;
+      
+      const slugInput = document.getElementById('slug-input');
+      slugInput.value = '';
+      slugInput.disabled = false;
+
+      document.getElementById('url-input').value = '';
+      document.getElementById('desc-input').value = '';
+      document.getElementById('footer-input').checked = false;
+      document.getElementById('submit-btn').innerHTML = `<i class="fa-solid fa-save"></i> Save Redirect`;
+      document.getElementById('cancel-edit-btn').style.display = 'none';
+      document.getElementById('live-slug-preview').textContent = 'slug';
+    }
+
+    // Form Submission: Save or Update Redirect
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const slug = document.getElementById('slug-input').value.trim().toLowerCase();
+      const destination_url = document.getElementById('url-input').value.trim();
+      const description = document.getElementById('desc-input').value.trim();
+      const is_footer = document.getElementById('footer-input').checked;
+      const token = getAuthToken();
+
+      try {
+        const response = await fetch('/api/links', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ slug, destination_url, description, is_footer })
+        });
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+          localStorage.removeItem('admin_token');
+          document.getElementById('auth-error-container').innerHTML = `
+            <div class="alert alert-error" style="margin-bottom: 1rem; font-size: 0.82rem;">
+              <i class="fa-solid fa-circle-exclamation"></i> Incorrect password or invalid session token.
+            </div>
+          `;
+          document.getElementById('auth-modal').style.display = 'flex';
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to save link');
+        }
+
+        showAlert(`Successfully saved redirection slug: <strong>${slug}</strong>`, 'success');
+        resetForm();
+        loadLinks();
+
+      } catch (err) {
+        showAlert(err.message, 'error');
+      }
+    }
+
+    // Delete Link Call
+    async function deleteLink(slug) {
+      if (!confirm(`Are you sure you want to permanently delete redirect slug: "${slug}"?`)) {
+        return;
+      }
+
+      const token = getAuthToken();
+
+      try {
+        const response = await fetch(`/api/links?slug=${encodeURIComponent(slug)}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+          localStorage.removeItem('admin_token');
+          document.getElementById('auth-error-container').innerHTML = `
+            <div class="alert alert-error" style="margin-bottom: 1rem; font-size: 0.82rem;">
+              <i class="fa-solid fa-circle-exclamation"></i> Incorrect password or invalid session token.
+            </div>
+          `;
+          document.getElementById('auth-modal').style.display = 'flex';
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to delete redirect');
+        }
+
+        showAlert(`Successfully deleted slug: <strong>${slug}</strong>`, 'success');
+        loadLinks();
+
+      } catch (err) {
+        showAlert(err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "vercel-dynamic-redirector",
+  "version": "1.0.0",
+  "description": "High-performance dynamic URL redirector deployed on Vercel with PostgreSQL database and environment variable fallback.",
+  "main": "api/redirect.js",
+  "scripts": {
+    "start": "node dev-server.js",
+    "vercel-dev": "vercel dev",
+    "deploy": "vercel"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5",
+    "vercel": "^37.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
+}

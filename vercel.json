@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/links", "destination": "/api/links" },
+    { "source": "/api/setup", "destination": "/api/setup" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/((?!api|admin|styles\\.css|index\\.html|admin\\.html|favicon\\.ico).*)$", "destination": "/api/redirect" }
+  ]
+}
