@@ -4,7 +4,9 @@
     { "source": "/api/links", "destination": "/api/links.js" },
     { "source": "/api/setup", "destination": "/api/setup.js" },
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/((?!api|admin|styles\\.css|index\\.html|admin\\.html|favicon\\.ico).*)$", "destination": "/api/redirect.js" }
+    { "source": "/styles.css", "destination": "/styles.css" },
+    { "source": "/avatar.png", "destination": "/avatar.png" },
+    { "source": "/favicon.ico", "destination": "/favicon.ico" },
+    { "source": "/:slug", "destination": "/api/redirect.js" }
   ]
 }
