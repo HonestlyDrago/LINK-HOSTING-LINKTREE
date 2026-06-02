@@ -35,6 +35,11 @@
       <a href="#" class="social-icon-btn" title="Telegram" id="footer-tg" style="display: none;"><i class="fab fa-telegram"></i></a>
       <a href="#" class="social-icon-btn" title="WhatsApp" id="footer-wa" style="display: none;"><i class="fab fa-whatsapp"></i></a>
       <a href="#" class="social-icon-btn" title="YouTube" id="footer-yt" style="display: none;"><i class="fab fa-youtube"></i></a>
+      <a href="#" class="social-icon-btn" title="TikTok" id="footer-tt" style="display: none;"><i class="fab fa-tiktok"></i></a>
+      <a href="#" class="social-icon-btn" title="Instagram" id="footer-ig" style="display: none;"><i class="fab fa-instagram"></i></a>
+      <a href="#" class="social-icon-btn" title="X (Twitter)" id="footer-x" style="display: none;"><i class="fab fa-x-twitter"></i></a>
+      <a href="#" class="social-icon-btn" title="Pinterest" id="footer-pin" style="display: none;"><i class="fab fa-pinterest"></i></a>
+      <a href="#" class="social-icon-btn" title="Reddit" id="footer-rd" style="display: none;"><i class="fab fa-reddit"></i></a>
       <a href="/admin" class="social-icon-btn" title="Manage Dashboard" style="opacity: 0.5;"><i class="fa-solid fa-gear"></i></a>
     </footer>
 
@@ -63,10 +68,19 @@
         return '<i class="fa-solid fa-briefcase" style="color: #14a800;"></i>';
       }
       if (lowerSlug.includes('twitter') || lowerSlug.includes('x') || lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
-        return '<i class="fab fa-twitter" style="color: #1da1f2;"></i>';
+        return '<i class="fab fa-x-twitter" style="color: #ffffff;"></i>';
       }
       if (lowerSlug.includes('instagram') || lowerSlug.includes('ig') || lowerUrl.includes('instagram.com')) {
         return '<i class="fab fa-instagram" style="color: #e1306c;"></i>';
+      }
+      if (lowerSlug.includes('tiktok') || lowerSlug.includes('tt') || lowerUrl.includes('tiktok.com')) {
+        return '<i class="fab fa-tiktok" style="color: #ffffff;"></i>';
+      }
+      if (lowerSlug.includes('pinterest') || lowerSlug.includes('pin') || lowerUrl.includes('pinterest.com')) {
+        return '<i class="fab fa-pinterest" style="color: #bd081c;"></i>';
+      }
+      if (lowerSlug.includes('reddit') || lowerSlug.includes('rd') || lowerUrl.includes('reddit.com')) {
+        return '<i class="fab fa-reddit" style="color: #ff4500;"></i>';
       }
       if (lowerSlug.includes('github') || lowerUrl.includes('github.com')) {
         return '<i class="fab fa-github" style="color: #f0f6fc;"></i>';
@@ -104,11 +118,21 @@
         let footerTgLink = null;
         let footerWaLink = null;
         let footerYtLink = null;
+        let footerTtLink = null;
+        let footerIgLink = null;
+        let footerXLink = null;
+        let footerPinLink = null;
+        let footerRdLink = null;
 
-        // Group matches for Telegram, WhatsApp, and YouTube
+        // Group matches for all platforms
         const tgLinks = [];
         const waLinks = [];
         const ytLinks = [];
+        const ttLinks = [];
+        const igLinks = [];
+        const xLinks = [];
+        const pinLinks = [];
+        const rdLinks = [];
 
         links.forEach(link => {
           const destLower = link.destination_url.toLowerCase();
@@ -123,41 +147,54 @@
           if (slugLower === 'youtube' || slugLower === 'yt' || destLower.includes('youtube.com/') || destLower.includes('youtu.be/')) {
             ytLinks.push(link);
           }
+          if (slugLower === 'tiktok' || slugLower === 'tt' || destLower.includes('tiktok.com/')) {
+            ttLinks.push(link);
+          }
+          if (slugLower === 'instagram' || slugLower === 'ig' || slugLower === 'insta' || destLower.includes('instagram.com/')) {
+            igLinks.push(link);
+          }
+          if (slugLower === 'x' || slugLower === 'twitter' || destLower.includes('x.com/') || destLower.includes('twitter.com/')) {
+            xLinks.push(link);
+          }
+          if (slugLower === 'pinterest' || slugLower === 'pin' || destLower.includes('pinterest.com/')) {
+            pinLinks.push(link);
+          }
+          if (slugLower === 'reddit' || slugLower === 'rd' || destLower.includes('reddit.com/')) {
+            rdLinks.push(link);
+          }
         });
 
-        // Resolve Telegram footer slot: ONLY show if explicitly pinned
+        // Resolve footer slots: ONLY show if explicitly pinned
         footerTgLink = tgLinks.find(l => l.is_footer) || null;
-
-        // Resolve WhatsApp footer slot: ONLY show if explicitly pinned
         footerWaLink = waLinks.find(l => l.is_footer) || null;
-
-        // Resolve YouTube footer slot: ONLY show if explicitly pinned
         footerYtLink = ytLinks.find(l => l.is_footer) || null;
+        footerTtLink = ttLinks.find(l => l.is_footer) || null;
+        footerIgLink = igLinks.find(l => l.is_footer) || null;
+        footerXLink = xLinks.find(l => l.is_footer) || null;
+        footerPinLink = pinLinks.find(l => l.is_footer) || null;
+        footerRdLink = rdLinks.find(l => l.is_footer) || null;
 
         // 2. Render footer social links if mapped
-        if (footerTgLink) {
-          const el = document.getElementById('footer-tg');
-          el.href = `/${footerTgLink.slug}`;
-          el.style.display = 'flex';
-        } else {
-          document.getElementById('footer-tg').style.display = 'none';
-        }
+        const renderFooterIcon = (id, link) => {
+          const el = document.getElementById(id);
+          if (el) {
+            if (link) {
+              el.href = `/${link.slug}`;
+              el.style.display = 'flex';
+            } else {
+              el.style.display = 'none';
+            }
+          }
+        };
 
-        if (footerWaLink) {
-          const el = document.getElementById('footer-wa');
-          el.href = `/${footerWaLink.slug}`;
-          el.style.display = 'flex';
-        } else {
-          document.getElementById('footer-wa').style.display = 'none';
-        }
-
-        if (footerYtLink) {
-          const el = document.getElementById('footer-yt');
-          el.href = `/${footerYtLink.slug}`;
-          el.style.display = 'flex';
-        } else {
-          document.getElementById('footer-yt').style.display = 'none';
-        }
+        renderFooterIcon('footer-tg', footerTgLink);
+        renderFooterIcon('footer-wa', footerWaLink);
+        renderFooterIcon('footer-yt', footerYtLink);
+        renderFooterIcon('footer-tt', footerTtLink);
+        renderFooterIcon('footer-ig', footerIgLink);
+        renderFooterIcon('footer-x', footerXLink);
+        renderFooterIcon('footer-pin', footerPinLink);
+        renderFooterIcon('footer-rd', footerRdLink);
 
         // 3. Loop and render Linktree Cards
         links.forEach((link, index) => {

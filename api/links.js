@@ -160,6 +160,11 @@ module.exports = async (req, res) => {
         if (cleanSlug === 'telegram' || cleanSlug === 'tg' || destLower.includes('t.me/')) platformMatch = 'telegram';
         if (cleanSlug === 'whatsapp' || cleanSlug === 'wa' || destLower.includes('wa.me/')) platformMatch = 'whatsapp';
         if (cleanSlug === 'youtube' || cleanSlug === 'yt' || destLower.includes('youtube.com/') || destLower.includes('youtu.be/')) platformMatch = 'youtube';
+        if (cleanSlug === 'tiktok' || cleanSlug === 'tt' || destLower.includes('tiktok.com/')) platformMatch = 'tiktok';
+        if (cleanSlug === 'instagram' || cleanSlug === 'ig' || cleanSlug === 'insta' || destLower.includes('instagram.com/')) platformMatch = 'instagram';
+        if (cleanSlug === 'x' || cleanSlug === 'twitter' || destLower.includes('x.com/') || destLower.includes('twitter.com/')) platformMatch = 'x';
+        if (cleanSlug === 'pinterest' || cleanSlug === 'pin' || destLower.includes('pinterest.com/')) platformMatch = 'pinterest';
+        if (cleanSlug === 'reddit' || cleanSlug === 'rd' || destLower.includes('reddit.com/')) platformMatch = 'reddit';
 
         if (platformMatch) {
           // Identify files matching this platform and turn off their is_footer pin
@@ -173,6 +178,11 @@ module.exports = async (req, res) => {
             if (platformMatch === 'telegram' && (rSlug === 'telegram' || rSlug === 'tg' || rDest.includes('t.me/'))) isSamePlatform = true;
             if (platformMatch === 'whatsapp' && (rSlug === 'whatsapp' || rSlug === 'wa' || rDest.includes('wa.me/'))) isSamePlatform = true;
             if (platformMatch === 'youtube' && (rSlug === 'youtube' || rSlug === 'yt' || rDest.includes('youtube.com/') || rDest.includes('youtu.be/'))) isSamePlatform = true;
+            if (platformMatch === 'tiktok' && (rSlug === 'tiktok' || rSlug === 'tt' || rDest.includes('tiktok.com/'))) isSamePlatform = true;
+            if (platformMatch === 'instagram' && (rSlug === 'instagram' || rSlug === 'ig' || rSlug === 'insta' || rDest.includes('instagram.com/'))) isSamePlatform = true;
+            if (platformMatch === 'x' && (rSlug === 'x' || rSlug === 'twitter' || rDest.includes('x.com/') || rDest.includes('twitter.com/'))) isSamePlatform = true;
+            if (platformMatch === 'pinterest' && (rSlug === 'pinterest' || rSlug === 'pin' || rDest.includes('pinterest.com/'))) isSamePlatform = true;
+            if (platformMatch === 'reddit' && (rSlug === 'reddit' || rSlug === 'rd' || rDest.includes('reddit.com/'))) isSamePlatform = true;
 
             if (isSamePlatform && row.slug !== cleanSlug) {
               idsToReset.push(row.id);
