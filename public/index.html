@@ -125,23 +125,14 @@
           }
         });
 
-        // Resolve Telegram footer slot: prioritize is_footer pin, then fallback to first link
-        if (tgLinks.length > 0) {
-          const pinned = tgLinks.find(l => l.is_footer);
-          footerTgLink = pinned || tgLinks[0];
-        }
+        // Resolve Telegram footer slot: ONLY show if explicitly pinned
+        footerTgLink = tgLinks.find(l => l.is_footer) || null;
 
-        // Resolve WhatsApp footer slot: prioritize is_footer pin, then fallback to first link
-        if (waLinks.length > 0) {
-          const pinned = waLinks.find(l => l.is_footer);
-          footerWaLink = pinned || waLinks[0];
-        }
+        // Resolve WhatsApp footer slot: ONLY show if explicitly pinned
+        footerWaLink = waLinks.find(l => l.is_footer) || null;
 
-        // Resolve YouTube footer slot: prioritize is_footer pin, then fallback to first link
-        if (ytLinks.length > 0) {
-          const pinned = ytLinks.find(l => l.is_footer);
-          footerYtLink = pinned || ytLinks[0];
-        }
+        // Resolve YouTube footer slot: ONLY show if explicitly pinned
+        footerYtLink = ytLinks.find(l => l.is_footer) || null;
 
         // 2. Render footer social links if mapped
         if (footerTgLink) {
