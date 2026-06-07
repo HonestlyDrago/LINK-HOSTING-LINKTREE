@@ -79,12 +79,8 @@ module.exports = async (req, res) => {
       }
 
       // Public: submit proof
-      const settings = await getSettings(client);
-      if (!settings.enabled) return res.status(403).json({ error: 'Proof submissions are disabled.' });
-
       const { task_name, description, image_data } = body;
       if (!task_name) return res.status(400).json({ error: 'task_name is required.' });
-      if (settings.mode === 'image_and_text' && !image_data) return res.status(400).json({ error: 'An image is required for this proof.' });
       if (image_data && image_data.length > 4 * 1024 * 1024) return res.status(400).json({ error: 'Image too large (max ~3MB). Compress it first.' });
 
       const r = await client.query(

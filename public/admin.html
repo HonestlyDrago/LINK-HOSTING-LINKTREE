@@ -170,6 +170,7 @@
             <button class="btn btn-secondary" onclick="instrAddBlock('steps')"><i class="fa-solid fa-list-ol"></i> Steps</button>
             <button class="btn btn-secondary" onclick="instrAddBlock('linkbox')"><i class="fa-solid fa-link"></i> Link Box</button>
             <button class="btn btn-secondary" onclick="instrAddBlock('image')"><i class="fa-solid fa-image"></i> Image</button>
+            <button class="btn btn-secondary" onclick="instrAddBlock('proofbox')"><i class="fa-solid fa-check-to-slot"></i> Proof Box</button>
           </div>
         </div>
       </div>
@@ -197,51 +198,7 @@
     <!-- PROOFS MANAGEMENT TAB -->
     <div id="tab-proofs" style="display:none;">
 
-      <!-- Proof Form Settings -->
-      <div class="panel" style="margin-bottom:1.25rem;">
-        <h2 class="panel-title" style="margin-bottom:1rem;"><i class="fa-solid fa-sliders" style="color:var(--primary)"></i> Proof Form Settings</h2>
-        <div style="display:grid;gap:.85rem;">
-          <!-- Enable toggle -->
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;">
-            <div>
-              <div style="font-weight:600;font-size:.9rem;margin-bottom:.15rem;">Enable Proof Submissions</div>
-              <div style="font-size:.78rem;color:var(--text-muted);">Show the submit form on the Instructions page</div>
-            </div>
-            <label style="position:relative;width:44px;height:24px;cursor:pointer;flex-shrink:0;">
-              <input type="checkbox" id="ps-enabled" style="opacity:0;width:0;height:0;position:absolute;">
-              <span id="ps-toggle-track" style="position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.1);transition:background .2s;"></span>
-              <span id="ps-toggle-thumb" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;"></span>
-            </label>
-          </div>
-          <!-- Mode -->
-          <div style="padding:.75rem 1rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;">
-            <div style="font-weight:600;font-size:.9rem;margin-bottom:.65rem;">Proof Type</div>
-            <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
-              <label style="display:flex;align-items:center;gap:.45rem;padding:.5rem .9rem;border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;font-size:.85rem;" id="ps-mode-img-label">
-                <input type="radio" name="ps-mode" id="ps-mode-image" value="image_and_text" style="accent-color:var(--primary);">
-                <i class="fa-solid fa-image" style="color:var(--primary)"></i> Image + Text
-              </label>
-              <label style="display:flex;align-items:center;gap:.45rem;padding:.5rem .9rem;border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;font-size:.85rem;" id="ps-mode-txt-label">
-                <input type="radio" name="ps-mode" id="ps-mode-text" value="text_only" style="accent-color:var(--primary);">
-                <i class="fa-solid fa-font" style="color:var(--primary)"></i> Text Only
-              </label>
-            </div>
-          </div>
-          <!-- Custom title -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem;">
-            <div class="form-group" style="margin:0;">
-              <label class="form-label">Form Title</label>
-              <input class="form-input" id="ps-title" placeholder="Submit Your Proof" maxlength="100">
-            </div>
-            <div class="form-group" style="margin:0;">
-              <label class="form-label">Task Name Placeholder</label>
-              <input class="form-input" id="ps-placeholder" placeholder="e.g. WoolRush Bot Referral" maxlength="200">
-            </div>
-          </div>
-          <button class="btn btn-primary" style="align-self:flex-start;" onclick="saveProofSettings()"><i class="fa-solid fa-save"></i> Save Settings</button>
-        </div>
-      </div>
-
+      <!-- Proof Form Settings Removed -->
       <!-- Submitted Proofs List -->
       <div class="panel" style="margin-bottom:1rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
@@ -647,6 +604,11 @@
           <div style="display:flex;justify-content:${justify};">${imgHtml}</div>
           ${b.caption?`<p style="text-align:${b.align||'center'};font-size:.8rem;color:var(--text-muted);margin-top:.6rem;font-style:italic;">${instrEsc(b.caption)}</p>`:''}
         </div>`;
+      } else if (b.type === 'proofbox') {
+        body = `<div style="padding:1.1rem 1.3rem;">
+          <div style="font-weight:700;margin-bottom:.5rem;color:var(--accent);"><i class="fa-solid fa-check-to-slot"></i> ${instrEsc(b.title||'Submit Proof')}</div>
+          <div style="font-size:.82rem;color:var(--text-muted);">Mode: ${b.mode === 'text_only' ? 'Text Only' : 'Image + Text'}</div>
+        </div>`;
       }
       return `<div class="panel ib-card" data-id="${b.id}" draggable="true" style="padding:0;margin-bottom:.75rem;overflow:hidden;">${toolbar}${body}</div>`;
     }
@@ -671,6 +633,7 @@
       if (type==='steps')     { b.title=''; b.steps=['']; }
       if (type==='linkbox')   { b.title='Links'; b.items=[{label:'',url:''}]; }
       if (type==='image')     { b.src=''; b.caption=''; b.align='center'; }
+      if (type==='proofbox')  { b.title='Submit Your Proof'; b.mode='image_and_text'; }
       instrBlocks.push(b);
       instrSave(); instrRender();
       instrEdit(b.id);
@@ -686,7 +649,7 @@
       instrEditingId = id;
       const b = instrBlocks.find(x=>x.id===id);
       if (!b) return;
-      const titles = {paragraph:'Edit Paragraph',steps:'Edit Steps',linkbox:'Edit Link Box',image:'Edit Image'};
+      const titles = {paragraph:'Edit Paragraph',steps:'Edit Steps',linkbox:'Edit Link Box',image:'Edit Image',proofbox:'Edit Proof Box'};
       document.getElementById('instr-modal-title').textContent = titles[b.type]||'Edit Block';
       const body = document.getElementById('instr-modal-body');
       if (b.type==='paragraph') {
@@ -728,6 +691,20 @@
           </div>`;
         window._instrImgAlign = b.align||'center';
         window._instrImgSrc   = b.src||'';
+      } else if (b.type==='proofbox') {
+        body.innerHTML=`
+          <div class="form-group">
+            <label class="form-label">Form Title / Task Name</label>
+            <input class="form-input" id="im-title" value="${instrEsc(b.title||'')}">
+            <p style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">This appears above the input and is sent as the task name.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Proof Type</label>
+            <select class="form-input" id="im-mode">
+              <option value="image_and_text" ${b.mode==='image_and_text'?'selected':''}>Image + Text</option>
+              <option value="text_only" ${b.mode==='text_only'?'selected':''}>Text Only</option>
+            </select>
+          </div>`;
       }
       document.getElementById('instr-modal').style.display='flex';
     }
@@ -776,6 +753,9 @@
         b.src     = window._instrImgSrc || document.getElementById('im-src').value.trim();
         b.caption = document.getElementById('im-caption').value.trim();
         b.align   = window._instrImgAlign || 'center';
+      } else if (b.type==='proofbox') {
+        b.title = document.getElementById('im-title').value.trim();
+        b.mode  = document.getElementById('im-mode').value;
       }
       instrSave(); instrRender(); instrCloseModal();
     }
@@ -852,40 +832,12 @@
 
     // ── Proofs Management ──────────────────────────────────────────────────
 
-    // Toggle visual update
-    document.addEventListener('DOMContentLoaded', () => {
-      const cb = document.getElementById('ps-enabled');
-      const track = document.getElementById('ps-toggle-track');
-      const thumb = document.getElementById('ps-toggle-thumb');
-      if (cb) cb.addEventListener('change', () => {
-        track.style.background = cb.checked ? 'var(--primary)' : 'rgba(255,255,255,.1)';
-        thumb.style.transform  = cb.checked ? 'translateX(20px)' : 'none';
-      });
-    });
-
     async function loadAdminProofs() {
       const grid = document.getElementById('admin-proofs-grid');
       grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>`;
       try {
         const r = await fetch('/api/proofs', { headers: { 'Authorization': `Bearer ${getAuthToken()}` } });
         const data = await r.json();
-        // Populate settings form
-        const s = data.settings || {};
-        const cb = document.getElementById('ps-enabled');
-        const track = document.getElementById('ps-toggle-track');
-        const thumb = document.getElementById('ps-toggle-thumb');
-        if (cb) {
-          cb.checked = !!s.enabled;
-          track.style.background = s.enabled ? 'var(--primary)' : 'rgba(255,255,255,.1)';
-          thumb.style.transform  = s.enabled ? 'translateX(20px)' : 'none';
-        }
-        const modeEl = document.getElementById(s.mode === 'text_only' ? 'ps-mode-text' : 'ps-mode-image');
-        if (modeEl) modeEl.checked = true;
-        const titleEl = document.getElementById('ps-title');
-        const phEl = document.getElementById('ps-placeholder');
-        if (titleEl) titleEl.value = s.title || '';
-        if (phEl) phEl.value = s.placeholder || '';
-        // Render proofs
         const proofs = data.proofs || [];
         if (!proofs.length) {
           grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);"><i class="fa-solid fa-images" style="font-size:2rem;display:block;margin-bottom:.75rem;"></i>No proofs submitted yet.</div>`;
@@ -907,25 +859,6 @@
           </div>`).join('');
       } catch(e) {
         grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--error);padding:2rem;">Failed to load proofs.</div>`;
-      }
-    }
-
-    async function saveProofSettings() {
-      const enabled = document.getElementById('ps-enabled').checked;
-      const mode    = document.querySelector('input[name="ps-mode"]:checked')?.value || 'image_and_text';
-      const title   = document.getElementById('ps-title').value.trim();
-      const placeholder = document.getElementById('ps-placeholder').value.trim();
-      try {
-        const r = await fetch('/api/proofs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
-          body: JSON.stringify({ type: 'settings', enabled, mode, title, placeholder })
-        });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Failed');
-        showAlert('Proof settings saved!', 'success');
-      } catch(e) {
-        showAlert('Failed: ' + e.message, 'error');
       }
     }
 
