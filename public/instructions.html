@@ -75,6 +75,45 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;min-he
     <div class="skel" style="animation-delay:.2s"></div>
   </div>
 
+  <!-- Proof Submit Form (shown only if admin enables it) -->
+  <div id="proof-form-wrap" style="display:none;margin-top:2rem;">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
+      <div style="flex:1;height:1px;background:var(--bdr);"></div>
+      <span style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap;">📸 Submit Proof</span>
+      <div style="flex:1;height:1px;background:var(--bdr);"></div>
+    </div>
+    <div style="background:var(--surf);border:1px solid var(--bdr);border-radius:18px;overflow:hidden;">
+      <div style="padding:1.1rem 1.4rem;background:var(--surf2);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:.6rem;">
+        <span style="font-size:1.2rem;">📸</span>
+        <h3 id="pf-form-title" style="font-size:.95rem;font-weight:700;margin:0;">Submit Your Proof</h3>
+      </div>
+      <div style="padding:1.4rem;">
+        <div style="margin-bottom:.9rem;">
+          <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.38rem;">Task Name *</label>
+          <input id="pf-task" placeholder="e.g. WoolRush Bot Referral" maxlength="255"
+            style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:12px;padding:.65rem .85rem;color:var(--txt);font-size:.88rem;font-family:inherit;transition:border-color .18s;outline:none;">
+        </div>
+        <div style="margin-bottom:.9rem;">
+          <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.38rem;">Description (optional)</label>
+          <input id="pf-desc" placeholder="Brief note" maxlength="500"
+            style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:12px;padding:.65rem .85rem;color:var(--txt);font-size:.88rem;font-family:inherit;transition:border-color .18s;outline:none;">
+        </div>
+        <div id="pf-img-wrap" style="margin-bottom:.9rem;display:none;">
+          <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.38rem;">Screenshot *</label>
+          <input type="file" id="pf-img" accept="image/*" onchange="pfPreview(this)"
+            style="width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:12px;padding:.5rem;color:var(--txt);font-size:.85rem;font-family:inherit;cursor:pointer;">
+          <img id="pf-preview" style="width:100%;max-height:200px;object-fit:contain;border-radius:12px;background:var(--surf2);display:none;margin-top:.5rem;" alt="Preview">
+        </div>
+        <button onclick="submitProof()" id="pf-btn"
+          style="width:100%;padding:.7rem;background:linear-gradient(135deg,var(--accent),var(--accentd));color:#fff;border:none;border-radius:12px;font-size:.88rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:opacity .2s;">
+          📤 Submit Proof
+        </button>
+        <div id="pf-ok" style="display:none;margin-top:.75rem;padding:.65rem .9rem;border-radius:12px;font-size:.83rem;font-weight:500;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#22c55e;">✅ Proof submitted! Thank you.</div>
+        <div id="pf-err" style="display:none;margin-top:.75rem;padding:.65rem .9rem;border-radius:12px;font-size:.83rem;font-weight:500;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;"></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 
@@ -158,8 +197,82 @@ async function copyBox(id, btnId) {
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+// ── Proof Form (admin-controlled) ───────────────────────────────────────────
+let _proofMode = 'image_and_text';
+
+async function loadProofSettings() {
+  try {
+    const r = await fetch('/api/proofs');
+    const data = await r.json();
+    const s = data.settings || {};
+    if (!s.enabled) return; // form stays hidden
+    _proofMode = s.mode || 'image_and_text';
+    // Show form
+    document.getElementById('proof-form-wrap').style.display = 'block';
+    if (s.title) document.getElementById('pf-form-title').textContent = s.title;
+    if (s.placeholder) document.getElementById('pf-task').placeholder = s.placeholder;
+    // Show image field only if mode requires it
+    if (_proofMode === 'image_and_text') document.getElementById('pf-img-wrap').style.display = 'block';
+  } catch(e) {}
+}
+
+function pfPreview(input) {
+  const prev = document.getElementById('pf-preview');
+  if (!input.files[0]) { prev.style.display='none'; return; }
+  const reader = new FileReader();
+  reader.onload = e => { prev.src = e.target.result; prev.style.display = 'block'; };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function submitProof() {
+  const task = document.getElementById('pf-task').value.trim();
+  const desc = document.getElementById('pf-desc').value.trim();
+  const ok = document.getElementById('pf-ok');
+  const err = document.getElementById('pf-err');
+  const btn = document.getElementById('pf-btn');
+  ok.style.display = err.style.display = 'none';
+  if (!task) { err.textContent = '⚠️ Task name is required.'; err.style.display='block'; return; }
+
+  const file = _proofMode === 'image_and_text' ? document.getElementById('pf-img').files[0] : null;
+  if (_proofMode === 'image_and_text' && !file) { err.textContent = '⚠️ Please select a screenshot.'; err.style.display='block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Uploading...';
+
+  const doSubmit = async (image_data) => {
+    try {
+      const r = await fetch('/api/proofs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_name: task, description: desc, image_data: image_data || null })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Upload failed');
+      ok.style.display = 'block';
+      document.getElementById('pf-task').value = '';
+      document.getElementById('pf-desc').value = '';
+      const imgEl = document.getElementById('pf-img');
+      const prevEl = document.getElementById('pf-preview');
+      if (imgEl) imgEl.value = '';
+      if (prevEl) prevEl.style.display = 'none';
+    } catch(ex) {
+      err.textContent = '❌ ' + ex.message; err.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.innerHTML = '📤 Submit Proof';
+    }
+  };
+
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => doSubmit(e.target.result);
+    reader.readAsDataURL(file);
+  } else {
+    doSubmit(null);
+  }
+}
+
 // ── Init ────────────────────────────────────────────────────────────────────
 loadBlocks();
+loadProofSettings();
 </script>
 </body>
 </html>

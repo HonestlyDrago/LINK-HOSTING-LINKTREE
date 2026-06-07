@@ -9,14 +9,26 @@ if (DATABASE_URL) {
   pool = new Pool({ connectionString: DATABASE_URL, max: 5, idleTimeoutMillis: 10000, connectionTimeoutMillis: 15000, ssl: { rejectUnauthorized: false } });
 }
 
-async function ensureTable(client) {
+const DEFAULT_SETTINGS = { enabled: false, mode: 'image_and_text', title: 'Submit Your Proof', placeholder: 'e.g. Task name or activity' };
+
+async function ensureTables(client) {
   await client.query(`CREATE TABLE IF NOT EXISTS proofs (
     id SERIAL PRIMARY KEY,
     task_name VARCHAR(255) NOT NULL,
     description TEXT,
-    image_data TEXT NOT NULL,
+    image_data TEXT,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );`);
+  await client.query(`CREATE TABLE IF NOT EXISTS page_content (
+    key VARCHAR(100) PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );`);
+}
+
+async function getSettings(client) {
+  const r = await client.query("SELECT value FROM page_content WHERE key='proof_settings';");
+  return r.rows.length ? { ...DEFAULT_SETTINGS, ...JSON.parse(r.rows[0].value) } : DEFAULT_SETTINGS;
 }
 
 function isAuth(req) {
@@ -35,25 +47,54 @@ module.exports = async (req, res) => {
   let client;
   try {
     client = await pool.connect();
-    await ensureTable(client);
+    await ensureTables(client);
 
+    // GET — return settings + proofs (admin sees all, public sees settings only)
     if (req.method === 'GET') {
-      const r = await client.query('SELECT id,task_name,description,image_data,submitted_at FROM proofs ORDER BY submitted_at DESC LIMIT 100;');
+      const settings = await getSettings(client);
+      // Only return proof list to admin
+      if (isAuth(req)) {
+        const r = await client.query('SELECT id,task_name,description,image_data,submitted_at FROM proofs ORDER BY submitted_at DESC LIMIT 200;');
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(200).json({ settings, proofs: r.rows });
+      }
+      // Public only gets settings (to know if form should show)
       res.setHeader('Cache-Control', 'no-store');
-      return res.status(200).json({ proofs: r.rows });
+      return res.status(200).json({ settings });
     }
 
+    // POST — either save settings (admin) or submit a proof (public)
     if (req.method === 'POST') {
-      const { task_name, description, image_data } = req.body || {};
-      if (!task_name || !image_data) return res.status(400).json({ error: 'task_name and image_data required' });
-      if (image_data.length > 4 * 1024 * 1024) return res.status(400).json({ error: 'Image too large (max ~3MB). Compress before uploading.' });
+      const body = req.body || {};
+
+      // Admin: save settings
+      if (body.type === 'settings') {
+        if (!isAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
+        const s = { enabled: !!body.enabled, mode: body.mode === 'text_only' ? 'text_only' : 'image_and_text', title: (body.title||'Submit Your Proof').trim().slice(0,100), placeholder: (body.placeholder||'').trim().slice(0,200) };
+        await client.query(
+          `INSERT INTO page_content (key,value,updated_at) VALUES ('proof_settings',$1,NOW()) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW();`,
+          [JSON.stringify(s)]
+        );
+        return res.status(200).json({ success: true, settings: s });
+      }
+
+      // Public: submit proof
+      const settings = await getSettings(client);
+      if (!settings.enabled) return res.status(403).json({ error: 'Proof submissions are disabled.' });
+
+      const { task_name, description, image_data } = body;
+      if (!task_name) return res.status(400).json({ error: 'task_name is required.' });
+      if (settings.mode === 'image_and_text' && !image_data) return res.status(400).json({ error: 'An image is required for this proof.' });
+      if (image_data && image_data.length > 4 * 1024 * 1024) return res.status(400).json({ error: 'Image too large (max ~3MB). Compress it first.' });
+
       const r = await client.query(
         'INSERT INTO proofs (task_name,description,image_data) VALUES ($1,$2,$3) RETURNING id,task_name,description,submitted_at;',
-        [task_name.trim().slice(0,255), (description||'').trim().slice(0,500), image_data]
+        [task_name.trim().slice(0,255), (description||'').trim().slice(0,500), image_data||null]
       );
       return res.status(201).json({ success: true, proof: r.rows[0] });
     }
 
+    // DELETE — admin only
     if (req.method === 'DELETE') {
       if (!isAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
       const { id } = req.query || {};
