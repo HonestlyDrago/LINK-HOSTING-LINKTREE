@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Opening Telegram...</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0a0d14;color:#e2e8f0;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center}
+.card{background:#111827;border:1px solid #1e2d47;border-radius:24px;padding:2.5rem 2rem;max-width:360px;width:90%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.icon{width:72px;height:72px;background:linear-gradient(135deg,#2AABEE,#229ED9);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 32px rgba(42,171,238,.4);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{box-shadow:0 8px 32px rgba(42,171,238,.4)}50%{box-shadow:0 8px 48px rgba(42,171,238,.7)}}
+.icon svg{width:40px;height:40px;fill:#fff}
+h1{font-size:1.3rem;font-weight:700;margin-bottom:.5rem}
+p{color:#64748b;font-size:.88rem;line-height:1.6;margin-bottom:1.75rem}
+.btn-primary{display:block;width:100%;padding:.85rem 1.5rem;background:linear-gradient(135deg,#2AABEE,#229ED9);color:#fff;border:none;border-radius:12px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;margin-bottom:.75rem;transition:opacity .18s}
+.btn-primary:hover{opacity:.88}
+.btn-secondary{display:block;width:100%;padding:.75rem 1.5rem;background:transparent;color:#64748b;border:1px solid #1e2d47;border-radius:12px;font-size:.88rem;cursor:pointer;font-family:inherit;text-decoration:none;transition:all .18s}
+.btn-secondary:hover{border-color:#64748b;color:#e2e8f0}
+.status{font-size:.78rem;color:#2AABEE;margin-bottom:1rem;min-height:1.2rem}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">
+    <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.89 8.24-1.97 9.27c-.15.65-.53.81-1.08.5l-3-2.21-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.05 5.56-5.02c.24-.22-.05-.34-.37-.12l-6.87 4.33-2.96-.92c-.64-.2-.65-.64.13-.95l11.56-4.45c.53-.2.99.12.85.92z"/></svg>
+  </div>
+  <h1>Opening Telegram</h1>
+  <p>You'll be redirected to the Telegram app automatically. If nothing happens, tap the button below.</p>
+  <div class="status" id="status">Attempting to open Telegram...</div>
+  <a id="btn-app" href="#" class="btn-primary" onclick="openTg(event)">Open in Telegram App</a>
+  <a id="btn-browser" href="#" class="btn-secondary" onclick="openBrowser(event)">Open in browser instead</a>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const url = params.get('url') || '';
+
+  // Convert https://t.me/... to tg:// deep link
+  function toTgDeepLink(httpsUrl) {
+    // https://t.me/username -> tg://resolve?domain=username
+    // https://t.me/bot?startapp=... -> tg://resolve?domain=bot&startapp=...
+    try {
+      const u = new URL(httpsUrl);
+      const path = u.pathname.replace(/^\//, ''); // remove leading slash
+      const query = u.searchParams;
+      let tgUrl = 'tg://resolve?domain=' + encodeURIComponent(path.split('/')[0]);
+      query.forEach((v, k) => { tgUrl += '&' + k + '=' + encodeURIComponent(v); });
+      return tgUrl;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  const tgDeep = url.startsWith('tg://') ? url : toTgDeepLink(url);
+  const webUrl = url.startsWith('https://') ? url : (url.startsWith('http://') ? url : 'https://t.me/');
+
+  document.getElementById('btn-browser').href = webUrl;
+
+  function openTg(e) {
+    e.preventDefault();
+    if (!tgDeep) { window.open(webUrl, '_blank'); return; }
+    document.getElementById('status').textContent = 'Opening Telegram...';
+    window.location.href = tgDeep;
+    // After a short delay, if still here, show hint
+    setTimeout(() => {
+      document.getElementById('status').textContent = 'If Telegram didn\'t open, tap the button again.';
+    }, 2000);
+  }
+
+  function openBrowser(e) {
+    e.preventDefault();
+    window.open(webUrl, '_blank');
+  }
+
+  // Auto-attempt on page load after 600ms
+  setTimeout(() => {
+    if (tgDeep) {
+      window.location.href = tgDeep;
+      setTimeout(() => {
+        document.getElementById('status').textContent = 'Tap "Open in Telegram App" if the app didn\'t launch.';
+      }, 2500);
+    }
+  }, 600);
+</script>
+</body>
+</html>

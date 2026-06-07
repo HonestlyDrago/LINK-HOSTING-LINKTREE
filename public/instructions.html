@@ -180,7 +180,7 @@ function renderBlock(b) {
         </div>
         <div class="li-actions">
           <button class="li-copy-btn" id="${copyId}" title="Copy" onclick="copySingleUrl('${esc(urlStr)}', '${copyId}')">${copySvg}</button>
-          ${isUrl ? `<a href="${esc(urlStr)}" target="${isTg ? '_top' : '_blank'}" class="li-go-btn" title="Open Link">${goSvg}</a>` : ''}
+          ${isUrl ? `<a href="${isTg ? '/tg.html?url='+encodeURIComponent(urlStr) : esc(urlStr)}" target="_blank" class="li-go-btn" title="Open Link">${goSvg}</a>` : ''}
         </div>
       </div>`;
     }).join('');
