@@ -148,12 +148,13 @@ function renderBlock(b) {
     const items = (b.items||[]).map((it, idx) => {
       const urlStr = it.url || '';
       const isUrl = urlStr.startsWith('http') || urlStr.startsWith('tg://');
+      const isTg = urlStr.includes('t.me/') || urlStr.includes('tg://');
       
       let iconClass = 'def';
       let iconSvg = '<svg fill="currentColor" viewBox="0 0 24 24" width="14" height="14"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>';
       
       if (isUrl) {
-        if (urlStr.includes('t.me') || urlStr.includes('tg://')) {
+        if (isTg) {
           iconClass = 'tg';
           iconSvg = '<svg fill="#fff" viewBox="0 0 24 24" width="14" height="14"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.89 8.24l-1.97 9.27c-.15.65-.53.81-1.08.5l-3-2.21-1.45 1.4c-.16.16-.3.3-.61.3l.21-3.05 5.56-5.02c.24-.22-.05-.34-.37-.12l-6.87 4.33-2.96-.92c-.64-.2-.65-.64.13-.95l11.56-4.45c.53-.2.99.12.85.92z"/></svg>';
         } else if (urlStr.includes('youtube.com') || urlStr.includes('youtu.be')) {
@@ -166,14 +167,20 @@ function renderBlock(b) {
       const copySvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
       const goSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
 
+      const labelText = it.label ? esc(it.label) : esc(urlStr || 'Link');
+      const showUrl = it.label && urlStr && it.label !== urlStr;
+
       return `<div class="li-btn">
         <div class="li-btn-left">
           <div class="li-icon ${iconClass}">${iconSvg}</div>
-          <div class="li-label">${esc(it.label||it.url||'Link')}</div>
+          <div style="display:flex;flex-direction:column;min-width:0;flex:1">
+            <div class="li-label" style="white-space:normal;overflow:visible;line-height:1.4">${labelText}</div>
+            ${showUrl ? `<div style="font-size:.75rem;color:${isUrl?'var(--accent)':'var(--muted)'};word-break:break-all;margin-top:.25rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">${esc(urlStr)}</div>` : ''}
+          </div>
         </div>
         <div class="li-actions">
           <button class="li-copy-btn" id="${copyId}" title="Copy" onclick="copySingleUrl('${esc(urlStr)}', '${copyId}')">${copySvg}</button>
-          ${isUrl ? `<a href="${esc(urlStr)}" target="_blank" class="li-go-btn" title="Open Link">${goSvg}</a>` : ''}
+          ${isUrl ? `<a href="${esc(urlStr)}" target="${isTg ? '_top' : '_blank'}" class="li-go-btn" title="Open Link">${goSvg}</a>` : ''}
         </div>
       </div>`;
     }).join('');
