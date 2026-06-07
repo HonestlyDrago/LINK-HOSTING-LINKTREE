@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1117;--surf:#1a1f2e;--surf2:#232840;--bdr:#2a3050;--txt:#e0e6f0;--muted:#8896b3;--accent:#2AABEE;--accentd:#229ED9;--ok:#22c55e;--err:#ef4444;--r:16px;--rs:10px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:5rem}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(15,17,23,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--bdr);padding:.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+.hdr-title{font-size:1.05rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+.hdr-actions{display:flex;gap:.5rem;align-items:center}
+.badge{padding:.25rem .65rem;border-radius:99px;font-size:.7rem;font-weight:700;background:rgba(42,171,238,.15);color:var(--accent);border:1px solid rgba(42,171,238,.3);display:none}
+.edit-mode .badge{display:inline-flex}
+
+/* BUTTONS */
+.btn{padding:.5rem .95rem;border-radius:var(--rs);font-size:.82rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .18s}
+.btn:hover{opacity:.82;transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accentd));color:#fff}
+.btn-ghost{background:var(--surf2);color:var(--muted);border:1px solid var(--bdr)}
+.btn-sm{padding:.35rem .7rem;font-size:.78rem}
+
+/* CONTAINER */
+.wrap{max-width:660px;margin:0 auto;padding:1.75rem 1.1rem}
+
+/* BLOCK */
+.block{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:.85rem;overflow:hidden;transition:box-shadow .2s}
+.block:hover{box-shadow:0 4px 24px rgba(0,0,0,.35)}
+.block.dragging{opacity:.35}
+.block.over{border-top:2px solid var(--accent)}
+
+/* TOOLBAR */
+.toolbar{display:none;align-items:center;gap:.4rem;padding:.45rem .7rem;background:var(--surf2);border-bottom:1px solid var(--bdr)}
+.edit-mode .toolbar{display:flex}
+.drag-h{cursor:grab;color:var(--muted);font-size:1.1rem;padding:.2rem;user-select:none;line-height:1}
+.drag-h:active{cursor:grabbing}
+.type-tag{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg);padding:.15rem .45rem;border-radius:99px;border:1px solid var(--bdr);flex:1}
+.tbtn{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:.2rem .35rem;border-radius:6px;font-size:.8rem;transition:all .15s;font-family:inherit}
+.tbtn:hover{background:var(--bdr);color:var(--txt)}
+.tbtn.del:hover{background:rgba(239,68,68,.15);color:var(--err)}
+
+/* BLOCK BODY */
+.bdy{padding:1.2rem 1.4rem}
+
+/* PARAGRAPH */
+.para-text{font-size:.92rem;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+.para-text:empty::before{content:'Click Edit to add text…';color:var(--muted)}
+
+/* STEPS */
+.blk-title{font-size:1rem;font-weight:700;margin-bottom:.9rem}
+.steps-ul{list-style:none}
+.step-li{display:flex;align-items:flex-start;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--bdr);font-size:.88rem;line-height:1.55}
+.step-li:last-child{border-bottom:none}
+.step-num{min-width:1.65rem;height:1.65rem;background:linear-gradient(135deg,var(--accent),var(--accentd));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
+.step-txt{flex:1;padding-top:.06rem}
+
+/* LINKBOX */
+.lb-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem}
+.lb-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.45rem}
+.copy-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .18s;font-family:inherit}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(42,171,238,.08)}
+.copy-btn.ok{border-color:var(--ok);color:var(--ok);background:rgba(34,197,94,.08)}
+.li-row{display:flex;align-items:center;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--bdr)}
+.li-row:last-child{border-bottom:none}
+.li-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.li-label{font-size:.82rem;font-weight:600;min-width:90px;color:var(--txt)}
+.li-url{font-size:.78rem;color:var(--accent);text-decoration:none;flex:1;word-break:break-all}
+.li-url:hover{text-decoration:underline}
+.li-plain{font-size:.82rem;color:var(--muted);flex:1;word-break:break-word}
+
+/* ADD BLOCKS BAR */
+.add-bar{display:none;gap:.45rem;flex-wrap:wrap;padding:1.1rem;background:var(--surf);border:1px dashed var(--bdr);border-radius:var(--r);margin-top:.5rem}
+.edit-mode .add-bar{display:flex}
+.add-lbl{width:100%;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.add-btn{padding:.45rem .9rem;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--surf2);color:var(--muted);transition:all .18s;font-family:inherit}
+.add-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(42,171,238,.08)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:4rem 1rem;color:var(--muted)}
+.empty-ico{font-size:2.8rem;margin-bottom:1rem}
+.empty h2{font-size:1rem;font-weight:600;margin-bottom:.4rem}
+.empty p{font-size:.85rem}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:500;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);width:100%;max-width:520px;max-height:88vh;overflow-y:auto}
+.mhdr{padding:1.1rem 1.4rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.mhdr h2{font-size:.95rem;font-weight:700}
+.mclose{background:transparent;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;line-height:1}
+.mbdy{padding:1.4rem}
+.mftr{padding:.9rem 1.4rem;border-top:1px solid var(--bdr);display:flex;gap:.5rem;justify-content:flex-end}
+.fg{margin-bottom:.9rem}
+.flbl{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.35rem}
+.fi{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:.62rem .85rem;color:var(--txt);font-size:.88rem;font-family:inherit;transition:border-color .18s;resize:vertical}
+.fi:focus{outline:none;border-color:var(--accent)}
+textarea.fi{min-height:110px}
+
+/* STEP ROWS IN MODAL */
+.step-rows{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.6rem}
+.srow{display:flex;align-items:center;gap:.4rem}
+.srow-n{font-size:.72rem;color:var(--muted);min-width:1.4rem;text-align:center}
+.srow .fi{flex:1;padding:.45rem .65rem;font-size:.85rem}
+.sdel{background:transparent;border:none;color:var(--err);cursor:pointer;opacity:.6;font-size:.95rem}
+.sdel:hover{opacity:1}
+
+/* LINK ROWS IN MODAL */
+.lrows{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.6rem}
+.lrow{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:.7rem;display:flex;flex-direction:column;gap:.35rem;position:relative}
+.lrow .fi{padding:.42rem .65rem;font-size:.82rem}
+.ldel{position:absolute;top:.45rem;right:.45rem;background:transparent;border:none;color:var(--err);cursor:pointer;opacity:.55;font-size:.85rem}
+.ldel:hover{opacity:1}
+.dashed-btn{width:100%;padding:.5rem;background:transparent;border:1px dashed var(--bdr);border-radius:8px;color:var(--muted);font-size:.82rem;cursor:pointer;font-family:inherit;transition:all .18s}
+.dashed-btn:hover{border-color:var(--accent);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-title">📋 Instructions <span class="badge">✏️ Edit Mode</span></div>
+  <div class="hdr-actions">
+    <button class="btn btn-ghost btn-sm" id="toggleEdit">✏️ Edit</button>
+    <button class="btn btn-primary btn-sm" id="saveBtn" style="display:none" onclick="save()">💾 Save</button>
+  </div>
+</header>
+
+<div class="wrap" id="wrap">
+  <div id="blocks"></div>
+  <div class="add-bar">
+    <div class="add-lbl">Add Block</div>
+    <button class="add-btn" onclick="addBlock('paragraph')">📝 Paragraph</button>
+    <button class="add-btn" onclick="addBlock('steps')">🔢 Steps</button>
+    <button class="add-btn" onclick="addBlock('linkbox')">🔗 Link Box</button>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="mhdr">
+      <h2 id="modal-title">Edit Block</h2>
+      <button class="mclose" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mbdy" id="modal-body"></div>
+    <div class="mftr">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveModal()">Save Block</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let blocks = JSON.parse(localStorage.getItem('instr_blocks') || '[]');
+let editMode = false;
+let editingId = null;
+let dragSrcEl = null;
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render() {
+  const el = document.getElementById('blocks');
+  if (!blocks.length) {
+    el.innerHTML = editMode ? '' : `<div class="empty"><div class="empty-ico">📋</div><h2>No instructions yet</h2><p>Enable Edit Mode to add content.</p></div>`;
+    return;
+  }
+  el.innerHTML = blocks.map(renderBlock).join('');
+  el.querySelectorAll('.block').forEach(attachDrag);
+}
+
+function renderBlock(b) {
+  const toolbar = `
+    <div class="toolbar">
+      <span class="drag-h" title="Drag to reorder">⠿</span>
+      <span class="type-tag">${b.type}</span>
+      <button class="tbtn" onclick="editBlock('${b.id}')">✏️ Edit</button>
+      <button class="tbtn del" onclick="deleteBlock('${b.id}')">🗑️</button>
+    </div>`;
+
+  let body = '';
+  if (b.type === 'paragraph') {
+    body = `<div class="bdy"><div class="para-text">${esc(b.content||'')}</div></div>`;
+  } else if (b.type === 'steps') {
+    const steps = (b.steps||[]).map((s,i)=>`
+      <li class="step-li">
+        <span class="step-num">${i+1}</span>
+        <span class="step-txt">${esc(s)}</span>
+      </li>`).join('');
+    body = `<div class="bdy">${b.title?`<div class="blk-title">${esc(b.title)}</div>`:''}
+      <ul class="steps-ul">${steps||'<li style="color:var(--muted);font-size:.85rem;padding:.5rem 0">No steps yet.</li>'}</ul></div>`;
+  } else if (b.type === 'linkbox') {
+    const items = (b.items||[]).map(it => {
+      const isUrl = it.url && (it.url.startsWith('http')||it.url.startsWith('tg://'));
+      return `<div class="li-row">
+        <span class="li-dot"></span>
+        <span class="li-label">${esc(it.label||'')}</span>
+        ${isUrl
+          ? `<a class="li-url" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.url)}</a>`
+          : `<span class="li-plain">${esc(it.url||'')}</span>`}
+      </div>`;
+    }).join('');
+    body = `<div class="bdy">
+      <div class="lb-hdr">
+        <div class="lb-title">🔗 ${esc(b.title||'Links')}</div>
+        <button class="copy-btn" onclick="copyBox('${b.id}',this)">📋 Copy All</button>
+      </div>
+      ${items||'<div style="color:var(--muted);font-size:.85rem">No links yet.</div>'}
+    </div>`;
+  }
+
+  return `<div class="block" data-id="${b.id}" draggable="true">${toolbar}${body}</div>`;
+}
+
+// ── Drag & Drop ────────────────────────────────────────────────────────────
+function attachDrag(el) {
+  el.addEventListener('dragstart', e => {
+    dragSrcEl = el;
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('dragging');
+    document.querySelectorAll('.block').forEach(b=>b.classList.remove('over'));
+  });
+  el.addEventListener('dragover', e => {
+    if(!editMode) return;
+    e.preventDefault();
+    document.querySelectorAll('.block').forEach(b=>b.classList.remove('over'));
+    if(el !== dragSrcEl) el.classList.add('over');
+  });
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    if(!dragSrcEl || dragSrcEl===el) return;
+    const srcId = dragSrcEl.dataset.id;
+    const dstId = el.dataset.id;
+    const si = blocks.findIndex(b=>b.id===srcId);
+    const di = blocks.findIndex(b=>b.id===dstId);
+    const [moved] = blocks.splice(si,1);
+    blocks.splice(di,0,moved);
+    save(); render();
+  });
+}
+
+// ── CRUD ───────────────────────────────────────────────────────────────────
+function addBlock(type) {
+  const b = { id: 'b_'+Date.now(), type };
+  if(type==='paragraph') b.content='';
+  if(type==='steps') { b.title=''; b.steps=['']; }
+  if(type==='linkbox') { b.title='Links'; b.items=[{label:'',url:''}]; }
+  blocks.push(b);
+  save(); render();
+  // auto-open editor
+  editBlock(b.id);
+}
+
+function deleteBlock(id) {
+  if(!confirm('Delete this block?')) return;
+  blocks = blocks.filter(b=>b.id!==id);
+  save(); render();
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+function editBlock(id) {
+  editingId = id;
+  const b = blocks.find(x=>x.id===id);
+  if(!b) return;
+  const modal = document.getElementById('modal');
+  const body  = document.getElementById('modal-body');
+  document.getElementById('modal-title').textContent = {paragraph:'Edit Paragraph',steps:'Edit Steps',linkbox:'Edit Link Box'}[b.type];
+
+  if(b.type==='paragraph') {
+    body.innerHTML=`
+      <div class="fg">
+        <label class="flbl">Content</label>
+        <textarea class="fi" id="ep-content" placeholder="Write your instructions here…">${esc(b.content||'')}</textarea>
+      </div>`;
+  } else if(b.type==='steps') {
+    body.innerHTML=`
+      <div class="fg">
+        <label class="flbl">Title (optional)</label>
+        <input class="fi" id="es-title" value="${esc(b.title||'')}">
+      </div>
+      <div class="fg">
+        <label class="flbl">Steps</label>
+        <div class="step-rows" id="es-rows"></div>
+        <button class="dashed-btn" onclick="addStepRow()">+ Add Step</button>
+      </div>`;
+    (b.steps||[]).forEach(s=>appendStepRow(s));
+  } else if(b.type==='linkbox') {
+    body.innerHTML=`
+      <div class="fg">
+        <label class="flbl">Box Title</label>
+        <input class="fi" id="el-title" value="${esc(b.title||'')}">
+      </div>
+      <div class="fg">
+        <label class="flbl">Items (Label + URL or Text)</label>
+        <div class="lrows" id="el-rows"></div>
+        <button class="dashed-btn" onclick="addLinkRow()">+ Add Item</button>
+      </div>`;
+    (b.items||[]).forEach(it=>appendLinkRow(it.label,it.url));
+  }
+
+  modal.classList.add('open');
+}
+
+function appendStepRow(val='') {
+  const rows = document.getElementById('es-rows');
+  const n = rows.children.length+1;
+  const d = document.createElement('div');
+  d.className='srow';
+  d.innerHTML=`<span class="srow-n">${n}</span><input class="fi" value="${esc(val)}" placeholder="Step ${n}…"><button class="sdel" onclick="this.parentElement.remove();renum()">✕</button>`;
+  rows.appendChild(d);
+}
+
+function addStepRow() { appendStepRow(); renum(); }
+
+function renum() {
+  document.querySelectorAll('#es-rows .srow').forEach((r,i)=>{
+    r.querySelector('.srow-n').textContent=i+1;
+    r.querySelector('input').placeholder=`Step ${i+1}…`;
+  });
+}
+
+function appendLinkRow(label='',url='') {
+  const rows = document.getElementById('el-rows');
+  const d = document.createElement('div');
+  d.className='lrow';
+  d.innerHTML=`
+    <input class="fi" placeholder="Label (e.g. Bot Link)" value="${esc(label)}">
+    <input class="fi" placeholder="URL or text (e.g. https://t.me/...)" value="${esc(url)}">
+    <button class="ldel" onclick="this.parentElement.remove()">✕</button>`;
+  rows.appendChild(d);
+}
+
+function addLinkRow() { appendLinkRow(); }
+
+function saveModal() {
+  const b = blocks.find(x=>x.id===editingId);
+  if(!b) return;
+  if(b.type==='paragraph') {
+    b.content = document.getElementById('ep-content').value;
+  } else if(b.type==='steps') {
+    b.title = document.getElementById('es-title').value;
+    b.steps = [...document.querySelectorAll('#es-rows .srow input')].map(i=>i.value).filter(v=>v.trim());
+  } else if(b.type==='linkbox') {
+    b.title = document.getElementById('el-title').value;
+    b.items = [...document.querySelectorAll('#el-rows .lrow')].map(row=>{
+      const ins = row.querySelectorAll('input');
+      return { label: ins[0].value, url: ins[1].value };
+    }).filter(it=>it.label||it.url);
+  }
+  save(); render(); closeModal();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editingId = null;
+}
+
+// ── Copy Box ───────────────────────────────────────────────────────────────
+function copyBox(id, btn) {
+  const b = blocks.find(x=>x.id===id);
+  if(!b || b.type!=='linkbox') return;
+  const lines = [`📌 ${b.title||'Links'}`, ''];
+  (b.items||[]).forEach(it => {
+    if(it.label && it.url) lines.push(`${it.label}\n${it.url}`);
+    else if(it.url) lines.push(it.url);
+    else if(it.label) lines.push(it.label);
+    lines.push('');
+  });
+  navigator.clipboard.writeText(lines.join('\n').trim()).then(()=>{
+    btn.textContent='✅ Copied!';
+    btn.classList.add('ok');
+    setTimeout(()=>{ btn.innerHTML='📋 Copy All'; btn.classList.remove('ok'); },2000);
+  }).catch(()=>alert('Copy failed – try manually.'));
+}
+
+// ── Edit Mode Toggle ───────────────────────────────────────────────────────
+document.getElementById('toggleEdit').addEventListener('click', () => {
+  editMode = !editMode;
+  const btn = document.getElementById('toggleEdit');
+  const saveBtn = document.getElementById('saveBtn');
+  btn.textContent = editMode ? '👁 Preview' : '✏️ Edit';
+  btn.className = editMode ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+  saveBtn.style.display = editMode ? 'inline-flex' : 'none';
+  document.body.classList.toggle('edit-mode', editMode);
+  render();
+});
+
+// ── Persist ────────────────────────────────────────────────────────────────
+function save() { localStorage.setItem('instr_blocks', JSON.stringify(blocks)); }
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Close modal on overlay click
+document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+
+// Init
+render();
+</script>
+</body>
+</html>

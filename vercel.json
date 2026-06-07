@@ -4,6 +4,7 @@
     { "source": "/api/links", "destination": "/api/links.js" },
     { "source": "/api/setup", "destination": "/api/setup.js" },
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/instructions", "destination": "/instructions.html" },
     { "source": "/styles.css", "destination": "/styles.css" },
     { "source": "/avatar.png", "destination": "/avatar.png" },
     { "source": "/favicon.ico", "destination": "/favicon.ico" },
