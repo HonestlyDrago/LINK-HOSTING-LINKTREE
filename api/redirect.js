@@ -118,14 +118,156 @@ module.exports = async (req, res) => {
     targetUrl = DEFAULT_REDIRECT_URL;
   }
 
-  // Set response headers for high performance Edge Caching
-  // - public: Response can be cached by browser and CDN
-  // - max-age=0: Browser must check with Vercel CDN each time
-  // - s-maxage=60: Vercel Edge CDN caches the redirect for 60 seconds
-  // - stale-while-revalidate=30: Serves stale redirect instantly while updating cache in background
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
+  // ─────────────────────────────────────────────────────────────────────────
+  // Telegram Deep Link Bridge
+  // t.me Mini App links opened in a browser do NOT trigger the startapp
+  // referral — only the native Telegram app processes it correctly.
+  // Solution: serve an HTML bridge page that attempts the tg:// protocol
+  // (opens Telegram app directly) and falls back to https://t.me/ after 1.5s.
+  // ─────────────────────────────────────────────────────────────────────────
+  const tMePattern = /^https?:\/\/t\.me\//i;
 
-  // HTTP 302 Found (Temporary Redirect) redirecting to the target dynamic URL
+  if (tMePattern.test(targetUrl)) {
+    // Convert https://t.me/Bot/app?startapp=X  →  tg://resolve?domain=Bot&appname=app&startapp=X
+    let tgDeepLink = targetUrl;
+    try {
+      const tUrl = new URL(targetUrl);
+      // Path looks like /BotName  or  /BotName/appname
+      const parts = tUrl.pathname.replace(/^\/+/, '').split('/');
+      const domain = parts[0] || '';
+      const appname = parts[1] || '';
+
+      const tgUrl = new URL('tg://resolve');
+      tgUrl.searchParams.set('domain', domain);
+      if (appname) tgUrl.searchParams.set('appname', appname);
+
+      // Forward all original query params (e.g. startapp)
+      for (const [key, val] of tUrl.searchParams.entries()) {
+        tgUrl.searchParams.set(key, val);
+      }
+
+      tgDeepLink = tgUrl.toString();
+    } catch (convErr) {
+      console.warn('Telegram URL conversion failed, using raw t.me link:', convErr.message);
+    }
+
+    const safeTarget   = targetUrl.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const safeDeepLink = tgDeepLink.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opening Telegram…</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0f1117;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #e0e6f0;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .card {
+      background: #1a1f2e;
+      border: 1px solid #2a3050;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+    .tg-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #2AABEE, #229ED9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
+      font-size: 2rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+    p  { font-size: 0.9rem; color: #8896b3; line-height: 1.5; margin-bottom: 1.75rem; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-bottom: 0.75rem;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary {
+      background: linear-gradient(135deg, #2AABEE, #229ED9);
+      color: #fff;
+      border: none;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #8896b3;
+      border: 1px solid #2a3050;
+      font-size: 0.8rem;
+    }
+    .progress {
+      height: 3px;
+      background: #2a3050;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 1.5rem;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #2AABEE, #229ED9);
+      border-radius: 99px;
+      transform-origin: left;
+      animation: shrink 1.5s linear forwards;
+    }
+    @keyframes shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="tg-icon">✈️</div>
+    <h1>Opening in Telegram</h1>
+    <p>You'll be redirected to the Telegram app automatically. If nothing happens, tap the button below.</p>
+    <a id="openBtn" href="${safeDeepLink}" class="btn btn-primary">Open in Telegram App</a>
+    <a href="${safeTarget}" class="btn btn-secondary">Open in browser instead</a>
+    <div class="progress"><div class="progress-bar"></div></div>
+  </div>
+  <script>
+    // Attempt deep link immediately
+    window.location.href = "${safeDeepLink}";
+
+    // After 1.5s (matching CSS animation) fall back to https://t.me/
+    setTimeout(function() {
+      window.location.href = "${safeTarget}";
+    }, 1500);
+  </script>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
+    return res.status(200).send(html);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Standard redirect for all non-Telegram links
+  // ─────────────────────────────────────────────────────────────────────────
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
   res.setHeader('Location', targetUrl);
   return res.status(302).end();
 };
