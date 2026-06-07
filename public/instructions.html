@@ -11,11 +11,13 @@ html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;min-height:100vh}
 
 /* HERO */
-.hero{background:linear-gradient(135deg,#0f1a2e 0%,#0d1f3c 40%,#0a1628 100%);border-bottom:1px solid var(--bdr);padding:3rem 1.5rem 2.5rem;text-align:center;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(42,171,238,.12),transparent);pointer-events:none}
-.hero-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--accentd));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 1.25rem;box-shadow:0 8px 32px rgba(42,171,238,.3)}
-.hero h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:800;margin-bottom:.5rem;letter-spacing:-.02em}
-.hero p{color:var(--muted);font-size:.95rem;max-width:480px;margin:0 auto;line-height:1.6}
+.hero{background:linear-gradient(135deg,#0f1a2e 0%,#0d1f3c 40%,#0a1628 100%);border-bottom:1px solid var(--bdr);padding:1rem 1.5rem;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 0% 50%,rgba(42,171,238,.12),transparent);pointer-events:none}
+.hero-inner{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:1rem}
+.hero-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accentd));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 4px 16px rgba(42,171,238,.3);flex-shrink:0}
+.hero-text{display:flex;flex-direction:column;justify-content:center}
+.hero h1{font-size:1.1rem;font-weight:700;margin:0;letter-spacing:-.01em}
+.hero p{color:var(--muted);font-size:.8rem;margin:0}
 
 /* CONTAINER */
 .wrap{max-width:680px;margin:0 auto;padding:2rem 1.1rem 4rem}
@@ -81,9 +83,13 @@ body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;min-he
 <body>
 
 <div class="hero">
-  <div class="hero-icon">📋</div>
-  <h1>Instructions</h1>
-  <p id="hero-sub">Loading guide...</p>
+  <div class="hero-inner">
+    <div class="hero-icon">📋</div>
+    <div class="hero-text">
+      <h1>Instructions</h1>
+      <p id="hero-sub">Loading guide...</p>
+    </div>
+  </div>
 </div>
 
 <div class="wrap">
