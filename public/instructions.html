@@ -1,416 +1,337 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Instructions</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f1117;--surf:#1a1f2e;--surf2:#232840;--bdr:#2a3050;--txt:#e0e6f0;--muted:#8896b3;--accent:#2AABEE;--accentd:#229ED9;--ok:#22c55e;--err:#ef4444;--r:16px;--rs:10px}
+:root{--bg:#0a0d14;--surf:#111827;--surf2:#1a2236;--bdr:#1e2d47;--txt:#e2e8f4;--muted:#64748b;--accent:#2AABEE;--accentd:#229ED9;--ok:#22c55e;--warn:#f59e0b;--r:18px;--rs:12px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:5rem}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;min-height:100vh}
 
-/* HEADER */
-.hdr{position:sticky;top:0;z-index:100;background:rgba(15,17,23,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--bdr);padding:.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
-.hdr-title{font-size:1.05rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
-.hdr-actions{display:flex;gap:.5rem;align-items:center}
-.badge{padding:.25rem .65rem;border-radius:99px;font-size:.7rem;font-weight:700;background:rgba(42,171,238,.15);color:var(--accent);border:1px solid rgba(42,171,238,.3);display:none}
-.edit-mode .badge{display:inline-flex}
-
-/* BUTTONS */
-.btn{padding:.5rem .95rem;border-radius:var(--rs);font-size:.82rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .18s}
-.btn:hover{opacity:.82;transform:translateY(-1px)}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accentd));color:#fff}
-.btn-ghost{background:var(--surf2);color:var(--muted);border:1px solid var(--bdr)}
-.btn-sm{padding:.35rem .7rem;font-size:.78rem}
+/* HERO */
+.hero{background:linear-gradient(135deg,#0f1a2e 0%,#0d1f3c 40%,#0a1628 100%);border-bottom:1px solid var(--bdr);padding:3rem 1.5rem 2.5rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(42,171,238,.12),transparent);pointer-events:none}
+.hero-icon{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--accentd));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 1.25rem;box-shadow:0 8px 32px rgba(42,171,238,.3)}
+.hero h1{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:800;margin-bottom:.5rem;letter-spacing:-.02em}
+.hero p{color:var(--muted);font-size:.95rem;max-width:480px;margin:0 auto;line-height:1.6}
 
 /* CONTAINER */
-.wrap{max-width:660px;margin:0 auto;padding:1.75rem 1.1rem}
+.wrap{max-width:680px;margin:0 auto;padding:2rem 1.1rem 4rem}
 
-/* BLOCK */
-.block{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:.85rem;overflow:hidden;transition:box-shadow .2s}
-.block:hover{box-shadow:0 4px 24px rgba(0,0,0,.35)}
-.block.dragging{opacity:.35}
-.block.over{border-top:2px solid var(--accent)}
-
-/* TOOLBAR */
-.toolbar{display:none;align-items:center;gap:.4rem;padding:.45rem .7rem;background:var(--surf2);border-bottom:1px solid var(--bdr)}
-.edit-mode .toolbar{display:flex}
-.drag-h{cursor:grab;color:var(--muted);font-size:1.1rem;padding:.2rem;user-select:none;line-height:1}
-.drag-h:active{cursor:grabbing}
-.type-tag{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg);padding:.15rem .45rem;border-radius:99px;border:1px solid var(--bdr);flex:1}
-.tbtn{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:.2rem .35rem;border-radius:6px;font-size:.8rem;transition:all .15s;font-family:inherit}
-.tbtn:hover{background:var(--bdr);color:var(--txt)}
-.tbtn.del:hover{background:rgba(239,68,68,.15);color:var(--err)}
-
-/* BLOCK BODY */
-.bdy{padding:1.2rem 1.4rem}
+/* BLOCKS */
+.block{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:1rem;overflow:hidden;animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.block:nth-child(1){animation-delay:.05s}.block:nth-child(2){animation-delay:.1s}.block:nth-child(3){animation-delay:.15s}.block:nth-child(4){animation-delay:.2s}.block:nth-child(5){animation-delay:.25s}
+.bdy{padding:1.3rem 1.5rem}
 
 /* PARAGRAPH */
-.para-text{font-size:.92rem;line-height:1.75;white-space:pre-wrap;word-break:break-word}
-.para-text:empty::before{content:'Click Edit to add text…';color:var(--muted)}
+.para{font-size:.93rem;line-height:1.8;color:var(--txt);white-space:pre-wrap;word-break:break-word}
 
 /* STEPS */
-.blk-title{font-size:1rem;font-weight:700;margin-bottom:.9rem}
-.steps-ul{list-style:none}
-.step-li{display:flex;align-items:flex-start;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--bdr);font-size:.88rem;line-height:1.55}
+.blk-ttl{font-size:1rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.step-li{display:flex;align-items:flex-start;gap:.75rem;padding:.65rem 0;border-bottom:1px solid var(--bdr)}
 .step-li:last-child{border-bottom:none}
-.step-num{min-width:1.65rem;height:1.65rem;background:linear-gradient(135deg,var(--accent),var(--accentd));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0}
-.step-txt{flex:1;padding-top:.06rem}
+.step-num{min-width:1.8rem;height:1.8rem;background:linear-gradient(135deg,var(--accent),var(--accentd));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;box-shadow:0 2px 8px rgba(42,171,238,.35)}
+.step-txt{font-size:.9rem;line-height:1.55;padding-top:.12rem}
 
 /* LINKBOX */
 .lb-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem}
 .lb-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.45rem}
-.copy-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .18s;font-family:inherit}
+.copy-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.38rem .75rem;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;color:var(--muted);font-size:.77rem;font-weight:600;cursor:pointer;transition:all .18s;font-family:inherit}
 .copy-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(42,171,238,.08)}
-.copy-btn.ok{border-color:var(--ok);color:var(--ok);background:rgba(34,197,94,.08)}
-.li-row{display:flex;align-items:center;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--bdr)}
+.copy-btn.ok{border-color:var(--ok);color:var(--ok)}
+.li-row{display:flex;align-items:flex-start;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--bdr)}
 .li-row:last-child{border-bottom:none}
-.li-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
-.li-label{font-size:.82rem;font-weight:600;min-width:90px;color:var(--txt)}
+.li-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:.45rem}
+.li-label{font-size:.82rem;font-weight:700;min-width:90px;color:var(--txt)}
 .li-url{font-size:.78rem;color:var(--accent);text-decoration:none;flex:1;word-break:break-all}
 .li-url:hover{text-decoration:underline}
 .li-plain{font-size:.82rem;color:var(--muted);flex:1;word-break:break-word}
 
-/* ADD BLOCKS BAR */
-.add-bar{display:none;gap:.45rem;flex-wrap:wrap;padding:1.1rem;background:var(--surf);border:1px dashed var(--bdr);border-radius:var(--r);margin-top:.5rem}
-.edit-mode .add-bar{display:flex}
-.add-lbl{width:100%;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.add-btn{padding:.45rem .9rem;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--surf2);color:var(--muted);transition:all .18s;font-family:inherit}
-.add-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(42,171,238,.08)}
+/* LOADING */
+.skel{background:linear-gradient(90deg,var(--surf) 25%,var(--surf2) 50%,var(--surf) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:var(--r);height:80px;margin-bottom:1rem}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-/* EMPTY STATE */
-.empty{text-align:center;padding:4rem 1rem;color:var(--muted)}
-.empty-ico{font-size:2.8rem;margin-bottom:1rem}
-.empty h2{font-size:1rem;font-weight:600;margin-bottom:.4rem}
-.empty p{font-size:.85rem}
+/* ── PROOFS SECTION ─────────────────────────────────────── */
+.section-divider{display:flex;align-items:center;gap:1rem;margin:2.5rem 0 1.5rem}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.section-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
 
-/* MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(5px);z-index:500;align-items:center;justify-content:center;padding:1rem}
-.overlay.open{display:flex}
-.modal{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);width:100%;max-width:520px;max-height:88vh;overflow-y:auto}
-.mhdr{padding:1.1rem 1.4rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
-.mhdr h2{font-size:.95rem;font-weight:700}
-.mclose{background:transparent;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;line-height:1}
-.mbdy{padding:1.4rem}
-.mftr{padding:.9rem 1.4rem;border-top:1px solid var(--bdr);display:flex;gap:.5rem;justify-content:flex-end}
+.proofs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.85rem;margin-bottom:2rem}
+.proof-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;animation:fadeUp .4s ease both}
+.proof-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.proof-img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:var(--surf2)}
+.proof-info{padding:.75rem .9rem}
+.proof-task{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .55rem;border-radius:99px;background:rgba(42,171,238,.12);color:var(--accent);border:1px solid rgba(42,171,238,.25);margin-bottom:.4rem}
+.proof-desc{font-size:.78rem;color:var(--muted);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.proof-date{font-size:.7rem;color:var(--muted);margin-top:.35rem;opacity:.7}
+.no-proofs{text-align:center;padding:2.5rem 1rem;color:var(--muted);border:1px dashed var(--bdr);border-radius:var(--r)}
+.no-proofs span{font-size:2rem;display:block;margin-bottom:.75rem}
+
+/* SUBMIT PROOF */
+.submit-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.submit-hdr{padding:1.1rem 1.4rem;background:var(--surf2);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:.6rem}
+.submit-hdr h3{font-size:.95rem;font-weight:700}
+.submit-body{padding:1.4rem}
 .fg{margin-bottom:.9rem}
-.flbl{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.35rem}
-.fi{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:.62rem .85rem;color:var(--txt);font-size:.88rem;font-family:inherit;transition:border-color .18s;resize:vertical}
+.flbl{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.38rem}
+.fi{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:.65rem .85rem;color:var(--txt);font-size:.88rem;font-family:inherit;transition:border-color .18s}
 .fi:focus{outline:none;border-color:var(--accent)}
-textarea.fi{min-height:110px}
+.fi-file{padding:.5rem;cursor:pointer}
+.img-prev{width:100%;max-height:200px;object-fit:contain;border-radius:var(--rs);background:var(--surf2);display:none;margin-top:.5rem}
+.btn{padding:.65rem 1.2rem;border-radius:var(--rs);font-size:.85rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .18s;display:inline-flex;align-items:center;gap:.4rem}
+.btn:hover{opacity:.85;transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accentd));color:#fff;width:100%;justify-content:center}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.msg{padding:.65rem .9rem;border-radius:var(--rs);font-size:.83rem;font-weight:500;margin-top:.75rem;display:none}
+.msg-ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--ok)}
+.msg-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171}
 
-/* STEP ROWS IN MODAL */
-.step-rows{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.6rem}
-.srow{display:flex;align-items:center;gap:.4rem}
-.srow-n{font-size:.72rem;color:var(--muted);min-width:1.4rem;text-align:center}
-.srow .fi{flex:1;padding:.45rem .65rem;font-size:.85rem}
-.sdel{background:transparent;border:none;color:var(--err);cursor:pointer;opacity:.6;font-size:.95rem}
-.sdel:hover{opacity:1}
-
-/* LINK ROWS IN MODAL */
-.lrows{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.6rem}
-.lrow{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--rs);padding:.7rem;display:flex;flex-direction:column;gap:.35rem;position:relative}
-.lrow .fi{padding:.42rem .65rem;font-size:.82rem}
-.ldel{position:absolute;top:.45rem;right:.45rem;background:transparent;border:none;color:var(--err);cursor:pointer;opacity:.55;font-size:.85rem}
-.ldel:hover{opacity:1}
-.dashed-btn{width:100%;padding:.5rem;background:transparent;border:1px dashed var(--bdr);border-radius:8px;color:var(--muted);font-size:.82rem;cursor:pointer;font-family:inherit;transition:all .18s}
-.dashed-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* LIGHTBOX */
+.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(6px)}
+.lb.open{display:flex}
+.lb-inner{position:relative;max-width:90vw;max-height:90vh}
+.lb img{max-width:100%;max-height:85vh;border-radius:var(--rs);display:block}
+.lb-info{text-align:center;margin-top:.75rem;color:#fff}
+.lb-task{font-size:.82rem;font-weight:700;color:var(--accent)}
+.lb-desc{font-size:.78rem;color:rgba(255,255,255,.7);margin-top:.2rem}
+.lb-close{position:absolute;top:-.5rem;right:-.5rem;width:2rem;height:2rem;background:#fff;border:none;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;color:#111}
+.empty-blocks{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty-blocks span{font-size:2.5rem;display:block;margin-bottom:.75rem}
 </style>
 </head>
 <body>
 
-<header class="hdr">
-  <div class="hdr-title">📋 Instructions <span class="badge">✏️ Edit Mode</span></div>
-  <div class="hdr-actions">
-    <button class="btn btn-ghost btn-sm" id="toggleEdit">✏️ Edit</button>
-    <button class="btn btn-primary btn-sm" id="saveBtn" style="display:none" onclick="save()">💾 Save</button>
-  </div>
-</header>
-
-<div class="wrap" id="wrap">
-  <div id="blocks"></div>
-  <div class="add-bar">
-    <div class="add-lbl">Add Block</div>
-    <button class="add-btn" onclick="addBlock('paragraph')">📝 Paragraph</button>
-    <button class="add-btn" onclick="addBlock('steps')">🔢 Steps</button>
-    <button class="add-btn" onclick="addBlock('linkbox')">🔗 Link Box</button>
-  </div>
+<div class="hero">
+  <div class="hero-icon">📋</div>
+  <h1>Instructions</h1>
+  <p id="hero-sub">Loading guide...</p>
 </div>
 
-<!-- EDIT MODAL -->
-<div class="overlay" id="modal">
-  <div class="modal">
-    <div class="mhdr">
-      <h2 id="modal-title">Edit Block</h2>
-      <button class="mclose" onclick="closeModal()">✕</button>
+<div class="wrap">
+
+  <!-- Instruction Blocks -->
+  <div id="blocks">
+    <div class="skel"></div>
+    <div class="skel" style="height:120px;animation-delay:.1s"></div>
+    <div class="skel" style="animation-delay:.2s"></div>
+  </div>
+
+  <!-- Proofs Section -->
+  <div class="section-divider"><span class="section-label">✅ Task Proofs</span></div>
+
+  <div id="proofs-grid" class="proofs-grid"></div>
+
+  <!-- Submit Proof -->
+  <div class="submit-card">
+    <div class="submit-hdr">
+      <span style="font-size:1.2rem">📸</span>
+      <h3>Submit Your Proof</h3>
     </div>
-    <div class="mbdy" id="modal-body"></div>
-    <div class="mftr">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveModal()">Save Block</button>
+    <div class="submit-body">
+      <div class="fg">
+        <label class="flbl">Task Name *</label>
+        <input class="fi" id="pf-task" placeholder="e.g. WoolRush Bot Referral" maxlength="255">
+      </div>
+      <div class="fg">
+        <label class="flbl">Description (optional)</label>
+        <input class="fi" id="pf-desc" placeholder="Brief note about this proof" maxlength="500">
+      </div>
+      <div class="fg">
+        <label class="flbl">Screenshot / Proof Image *</label>
+        <input type="file" class="fi fi-file" id="pf-img" accept="image/*" onchange="previewProofImg(this)">
+        <img id="pf-preview" class="img-prev" alt="Preview">
+      </div>
+      <button class="btn btn-primary" id="pf-submit" onclick="submitProof()">📤 Submit Proof</button>
+      <div class="msg msg-ok" id="pf-ok">✅ Proof submitted! Thank you.</div>
+      <div class="msg msg-err" id="pf-err"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Lightbox -->
+<div class="lb" id="lb" onclick="closeLb(event)">
+  <div class="lb-inner">
+    <button class="lb-close" onclick="document.getElementById('lb').classList.remove('open')">✕</button>
+    <img id="lb-img" src="" alt="">
+    <div class="lb-info">
+      <div class="lb-task" id="lb-task"></div>
+      <div class="lb-desc" id="lb-desc"></div>
     </div>
   </div>
 </div>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-let blocks = JSON.parse(localStorage.getItem('instr_blocks') || '[]');
-let editMode = false;
-let editingId = null;
-let dragSrcEl = null;
-
-// ── Render ─────────────────────────────────────────────────────────────────
-function render() {
+// ── Load Instruction Blocks ─────────────────────────────────────────────────
+async function loadBlocks() {
   const el = document.getElementById('blocks');
-  if (!blocks.length) {
-    el.innerHTML = editMode ? '' : `<div class="empty"><div class="empty-ico">📋</div><h2>No instructions yet</h2><p>Enable Edit Mode to add content.</p></div>`;
-    return;
+  try {
+    const r = await fetch('/api/instructions');
+    const data = await r.json();
+    const blocks = data.blocks || [];
+    el.innerHTML = '';
+    if (!blocks.length) {
+      el.innerHTML = `<div class="empty-blocks"><span>📝</span><p>No instructions added yet.</p></div>`;
+      document.getElementById('hero-sub').textContent = 'Check back soon for instructions.';
+      return;
+    }
+    document.getElementById('hero-sub').textContent = `${blocks.length} section${blocks.length>1?'s':''} — read carefully before proceeding`;
+    blocks.forEach((b, i) => {
+      const div = document.createElement('div');
+      div.className = 'block';
+      div.style.animationDelay = `${i * 0.07}s`;
+      div.innerHTML = renderBlock(b);
+      el.appendChild(div);
+    });
+  } catch(e) {
+    el.innerHTML = `<div class="empty-blocks"><span>⚠️</span><p>Failed to load instructions.</p></div>`;
   }
-  el.innerHTML = blocks.map(renderBlock).join('');
-  el.querySelectorAll('.block').forEach(attachDrag);
 }
 
 function renderBlock(b) {
-  const toolbar = `
-    <div class="toolbar">
-      <span class="drag-h" title="Drag to reorder">⠿</span>
-      <span class="type-tag">${b.type}</span>
-      <button class="tbtn" onclick="editBlock('${b.id}')">✏️ Edit</button>
-      <button class="tbtn del" onclick="deleteBlock('${b.id}')">🗑️</button>
-    </div>`;
-
-  let body = '';
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   if (b.type === 'paragraph') {
-    body = `<div class="bdy"><div class="para-text">${esc(b.content||'')}</div></div>`;
-  } else if (b.type === 'steps') {
-    const steps = (b.steps||[]).map((s,i)=>`
-      <li class="step-li">
-        <span class="step-num">${i+1}</span>
-        <span class="step-txt">${esc(s)}</span>
-      </li>`).join('');
-    body = `<div class="bdy">${b.title?`<div class="blk-title">${esc(b.title)}</div>`:''}
-      <ul class="steps-ul">${steps||'<li style="color:var(--muted);font-size:.85rem;padding:.5rem 0">No steps yet.</li>'}</ul></div>`;
-  } else if (b.type === 'image') {
-    const alignMap = {left:'flex-start',center:'center',right:'flex-end'};
-    const justify = alignMap[b.align||'center']||'center';
-    const imgHtml = b.src
-      ? `<img src="${b.src}" alt="${esc(b.caption||'')}" style="max-width:100%;border-radius:10px;display:block;">`
-      : `<div style="height:80px;border:2px dashed #2a3050;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.85rem;">No image</div>`;
-    body = `<div class="bdy">
-      <div style="display:flex;justify-content:${justify};">${imgHtml}</div>
-      ${b.caption?`<p style="text-align:${b.align||'center'};font-size:.8rem;color:var(--muted);margin-top:.6rem;font-style:italic;">${esc(b.caption)}</p>`:''}
-    </div>`;
-  } else if (b.type === 'linkbox') {
+    return `<div class="bdy"><div class="para">${esc(b.content||'')}</div></div>`;
+  }
+  if (b.type === 'steps') {
+    const steps = (b.steps||[]).map((s,i) => `<li class="step-li"><span class="step-num">${i+1}</span><span class="step-txt">${esc(s)}</span></li>`).join('');
+    return `<div class="bdy">${b.title?`<div class="blk-ttl">🔢 ${esc(b.title)}</div>`:''}<ul style="list-style:none">${steps}</ul></div>`;
+  }
+  if (b.type === 'linkbox') {
+    const id = 'cp_'+b.id;
     const items = (b.items||[]).map(it => {
       const isUrl = it.url && (it.url.startsWith('http')||it.url.startsWith('tg://'));
-      return `<div class="li-row">
-        <span class="li-dot"></span>
-        <span class="li-label">${esc(it.label||'')}</span>
-        ${isUrl
-          ? `<a class="li-url" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.url)}</a>`
-          : `<span class="li-plain">${esc(it.url||'')}</span>`}
-      </div>`;
+      return `<div class="li-row"><span class="li-dot"></span><span class="li-label">${esc(it.label||'')}</span>${isUrl?`<a class="li-url" href="${esc(it.url)}" target="_blank">${esc(it.url)}</a>`:`<span class="li-plain">${esc(it.url||'')}</span>`}</div>`;
     }).join('');
-    body = `<div class="bdy">
-      <div class="lb-hdr">
-        <div class="lb-title">🔗 ${esc(b.title||'Links')}</div>
-        <button class="copy-btn" onclick="copyBox('${b.id}',this)">📋 Copy All</button>
-      </div>
-      ${items||'<div style="color:var(--muted);font-size:.85rem">No links yet.</div>'}
-    </div>`;
+    return `<div class="bdy"><div class="lb-hdr"><div class="lb-title">🔗 ${esc(b.title||'Links')}</div><button class="copy-btn" id="${id}" onclick="copyBox('${b.id}','${id}')">📋 Copy All</button></div>${items}</div>`;
   }
-
-  return `<div class="block" data-id="${b.id}" draggable="true">${toolbar}${body}</div>`;
-}
-
-// ── Drag & Drop ────────────────────────────────────────────────────────────
-function attachDrag(el) {
-  el.addEventListener('dragstart', e => {
-    dragSrcEl = el;
-    el.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  });
-  el.addEventListener('dragend', () => {
-    el.classList.remove('dragging');
-    document.querySelectorAll('.block').forEach(b=>b.classList.remove('over'));
-  });
-  el.addEventListener('dragover', e => {
-    if(!editMode) return;
-    e.preventDefault();
-    document.querySelectorAll('.block').forEach(b=>b.classList.remove('over'));
-    if(el !== dragSrcEl) el.classList.add('over');
-  });
-  el.addEventListener('drop', e => {
-    e.preventDefault();
-    if(!dragSrcEl || dragSrcEl===el) return;
-    const srcId = dragSrcEl.dataset.id;
-    const dstId = el.dataset.id;
-    const si = blocks.findIndex(b=>b.id===srcId);
-    const di = blocks.findIndex(b=>b.id===dstId);
-    const [moved] = blocks.splice(si,1);
-    blocks.splice(di,0,moved);
-    save(); render();
-  });
-}
-
-// ── CRUD ───────────────────────────────────────────────────────────────────
-function addBlock(type) {
-  const b = { id: 'b_'+Date.now(), type };
-  if(type==='paragraph') b.content='';
-  if(type==='steps') { b.title=''; b.steps=['']; }
-  if(type==='linkbox') { b.title='Links'; b.items=[{label:'',url:''}]; }
-  blocks.push(b);
-  save(); render();
-  // auto-open editor
-  editBlock(b.id);
-}
-
-function deleteBlock(id) {
-  if(!confirm('Delete this block?')) return;
-  blocks = blocks.filter(b=>b.id!==id);
-  save(); render();
-}
-
-// ── Modal ──────────────────────────────────────────────────────────────────
-function editBlock(id) {
-  editingId = id;
-  const b = blocks.find(x=>x.id===id);
-  if(!b) return;
-  const modal = document.getElementById('modal');
-  const body  = document.getElementById('modal-body');
-  document.getElementById('modal-title').textContent = {paragraph:'Edit Paragraph',steps:'Edit Steps',linkbox:'Edit Link Box'}[b.type];
-
-  if(b.type==='paragraph') {
-    body.innerHTML=`
-      <div class="fg">
-        <label class="flbl">Content</label>
-        <textarea class="fi" id="ep-content" placeholder="Write your instructions here…">${esc(b.content||'')}</textarea>
-      </div>`;
-  } else if(b.type==='steps') {
-    body.innerHTML=`
-      <div class="fg">
-        <label class="flbl">Title (optional)</label>
-        <input class="fi" id="es-title" value="${esc(b.title||'')}">
-      </div>
-      <div class="fg">
-        <label class="flbl">Steps</label>
-        <div class="step-rows" id="es-rows"></div>
-        <button class="dashed-btn" onclick="addStepRow()">+ Add Step</button>
-      </div>`;
-    (b.steps||[]).forEach(s=>appendStepRow(s));
-  } else if(b.type==='linkbox') {
-    body.innerHTML=`
-      <div class="fg">
-        <label class="flbl">Box Title</label>
-        <input class="fi" id="el-title" value="${esc(b.title||'')}">
-      </div>
-      <div class="fg">
-        <label class="flbl">Items (Label + URL or Text)</label>
-        <div class="lrows" id="el-rows"></div>
-        <button class="dashed-btn" onclick="addLinkRow()">+ Add Item</button>
-      </div>`;
-    (b.items||[]).forEach(it=>appendLinkRow(it.label,it.url));
+  if (b.type === 'image') {
+    const alignMap = {left:'flex-start',center:'center',right:'flex-end'};
+    const justify = alignMap[b.align||'center']||'center';
+    if (!b.src) return '';
+    return `<div class="bdy"><div style="display:flex;justify-content:${justify}"><img src="${b.src}" alt="${esc(b.caption||'')}" style="max-width:100%;border-radius:10px"></div>${b.caption?`<p style="text-align:${b.align||'center'};font-size:.8rem;color:var(--muted);margin-top:.6rem;font-style:italic">${esc(b.caption)}</p>`:''}</div>`;
   }
-
-  modal.classList.add('open');
+  return '';
 }
 
-function appendStepRow(val='') {
-  const rows = document.getElementById('es-rows');
-  const n = rows.children.length+1;
-  const d = document.createElement('div');
-  d.className='srow';
-  d.innerHTML=`<span class="srow-n">${n}</span><input class="fi" value="${esc(val)}" placeholder="Step ${n}…"><button class="sdel" onclick="this.parentElement.remove();renum()">✕</button>`;
-  rows.appendChild(d);
-}
-
-function addStepRow() { appendStepRow(); renum(); }
-
-function renum() {
-  document.querySelectorAll('#es-rows .srow').forEach((r,i)=>{
-    r.querySelector('.srow-n').textContent=i+1;
-    r.querySelector('input').placeholder=`Step ${i+1}…`;
-  });
-}
-
-function appendLinkRow(label='',url='') {
-  const rows = document.getElementById('el-rows');
-  const d = document.createElement('div');
-  d.className='lrow';
-  d.innerHTML=`
-    <input class="fi" placeholder="Label (e.g. Bot Link)" value="${esc(label)}">
-    <input class="fi" placeholder="URL or text (e.g. https://t.me/...)" value="${esc(url)}">
-    <button class="ldel" onclick="this.parentElement.remove()">✕</button>`;
-  rows.appendChild(d);
-}
-
-function addLinkRow() { appendLinkRow(); }
-
-function saveModal() {
-  const b = blocks.find(x=>x.id===editingId);
-  if(!b) return;
-  if(b.type==='paragraph') {
-    b.content = document.getElementById('ep-content').value;
-  } else if(b.type==='steps') {
-    b.title = document.getElementById('es-title').value;
-    b.steps = [...document.querySelectorAll('#es-rows .srow input')].map(i=>i.value).filter(v=>v.trim());
-  } else if(b.type==='linkbox') {
-    b.title = document.getElementById('el-title').value;
-    b.items = [...document.querySelectorAll('#el-rows .lrow')].map(row=>{
-      const ins = row.querySelectorAll('input');
-      return { label: ins[0].value, url: ins[1].value };
-    }).filter(it=>it.label||it.url);
+// ── Copy Link Box ───────────────────────────────────────────────────────────
+let _blocksCache = [];
+async function getBlocks() {
+  if (!_blocksCache.length) {
+    const r = await fetch('/api/instructions');
+    const d = await r.json();
+    _blocksCache = d.blocks || [];
   }
-  save(); render(); closeModal();
+  return _blocksCache;
 }
 
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  editingId = null;
-}
-
-// ── Copy Box ───────────────────────────────────────────────────────────────
-function copyBox(id, btn) {
-  const b = blocks.find(x=>x.id===id);
-  if(!b || b.type!=='linkbox') return;
+async function copyBox(id, btnId) {
+  const blocks = await getBlocks();
+  const b = blocks.find(x => x.id === id); if (!b) return;
   const lines = [`📌 ${b.title||'Links'}`, ''];
-  (b.items||[]).forEach(it => {
-    if(it.label && it.url) lines.push(`${it.label}\n${it.url}`);
-    else if(it.url) lines.push(it.url);
-    else if(it.label) lines.push(it.label);
-    lines.push('');
+  (b.items||[]).forEach(it => { lines.push(it.label && it.url ? `${it.label}\n${it.url}` : it.url||it.label); lines.push(''); });
+  navigator.clipboard.writeText(lines.join('\n').trim()).then(() => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅ Copied!'; btn.classList.add('ok');
+    setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('ok'); }, 2000);
   });
-  navigator.clipboard.writeText(lines.join('\n').trim()).then(()=>{
-    btn.textContent='✅ Copied!';
-    btn.classList.add('ok');
-    setTimeout(()=>{ btn.innerHTML='📋 Copy All'; btn.classList.remove('ok'); },2000);
-  }).catch(()=>alert('Copy failed – try manually.'));
 }
 
-// ── Edit Mode Toggle ───────────────────────────────────────────────────────
-document.getElementById('toggleEdit').addEventListener('click', () => {
-  editMode = !editMode;
-  const btn = document.getElementById('toggleEdit');
-  const saveBtn = document.getElementById('saveBtn');
-  btn.textContent = editMode ? '👁 Preview' : '✏️ Edit';
-  btn.className = editMode ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
-  saveBtn.style.display = editMode ? 'inline-flex' : 'none';
-  document.body.classList.toggle('edit-mode', editMode);
-  render();
-});
+// ── Load Proofs ─────────────────────────────────────────────────────────────
+async function loadProofs() {
+  const grid = document.getElementById('proofs-grid');
+  try {
+    const r = await fetch('/api/proofs');
+    const data = await r.json();
+    const proofs = data.proofs || [];
+    if (!proofs.length) {
+      grid.innerHTML = `<div class="no-proofs" style="grid-column:1/-1"><span>🖼️</span><p>No proofs submitted yet. Be the first!</p></div>`;
+      return;
+    }
+    grid.innerHTML = proofs.map((p,i) => `
+      <div class="proof-card" style="animation-delay:${i*0.06}s" onclick="openLb('${p.id}')">
+        <img class="proof-img" src="${p.image_data}" alt="${escAttr(p.task_name)}" loading="lazy">
+        <div class="proof-info">
+          <div class="proof-task">✅ ${esc(p.task_name)}</div>
+          ${p.description?`<div class="proof-desc">${esc(p.description)}</div>`:''}
+          <div class="proof-date">${new Date(p.submitted_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        </div>
+      </div>`).join('');
+    window._proofs = proofs;
+  } catch(e) {
+    grid.innerHTML = `<div class="no-proofs" style="grid-column:1/-1"><span>⚠️</span><p>Could not load proofs.</p></div>`;
+  }
+}
 
-// ── Persist ────────────────────────────────────────────────────────────────
-function save() { localStorage.setItem('instr_blocks', JSON.stringify(blocks)); }
+// ── Lightbox ────────────────────────────────────────────────────────────────
+function openLb(id) {
+  const p = (window._proofs||[]).find(x => String(x.id) === String(id)); if (!p) return;
+  document.getElementById('lb-img').src = p.image_data;
+  document.getElementById('lb-task').textContent = '✅ ' + p.task_name;
+  document.getElementById('lb-desc').textContent = p.description || '';
+  document.getElementById('lb').classList.add('open');
+}
+function closeLb(e) { if (e.target === e.currentTarget) document.getElementById('lb').classList.remove('open'); }
 
-// ── Utils ──────────────────────────────────────────────────────────────────
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ── Submit Proof ────────────────────────────────────────────────────────────
+function previewProofImg(input) {
+  const prev = document.getElementById('pf-preview');
+  if (!input.files[0]) { prev.style.display='none'; return; }
+  const reader = new FileReader();
+  reader.onload = e => { prev.src = e.target.result; prev.style.display = 'block'; };
+  reader.readAsDataURL(input.files[0]);
+}
 
-// Close modal on overlay click
-document.getElementById('modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+async function submitProof() {
+  const task = document.getElementById('pf-task').value.trim();
+  const desc = document.getElementById('pf-desc').value.trim();
+  const file = document.getElementById('pf-img').files[0];
+  const ok = document.getElementById('pf-ok');
+  const err = document.getElementById('pf-err');
+  ok.style.display = err.style.display = 'none';
 
-// Init
-render();
+  if (!task) { err.textContent = '⚠️ Task name is required.'; err.style.display = 'block'; return; }
+  if (!file) { err.textContent = '⚠️ Please select a screenshot.'; err.style.display = 'block'; return; }
+
+  const btn = document.getElementById('pf-submit');
+  btn.disabled = true; btn.textContent = 'Uploading...';
+
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const r = await fetch('/api/proofs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_name: task, description: desc, image_data: e.target.result })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Upload failed');
+      ok.style.display = 'block';
+      document.getElementById('pf-task').value = '';
+      document.getElementById('pf-desc').value = '';
+      document.getElementById('pf-img').value = '';
+      document.getElementById('pf-preview').style.display = 'none';
+      loadProofs(); // refresh gallery
+    } catch(ex) {
+      err.textContent = '❌ ' + ex.message; err.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.innerHTML = '📤 Submit Proof';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return String(s||'').replace(/"/g,'&quot;'); }
+
+// ── Init ────────────────────────────────────────────────────────────────────
+loadBlocks();
+loadProofs();
 </script>
 </body>
 </html>

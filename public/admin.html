@@ -51,9 +51,10 @@
     </header>
 
     <!-- Tab Switcher -->
-    <div style="display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:.75rem;">
+    <div style="display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:.75rem;flex-wrap:wrap;">
       <button class="btn btn-primary" id="tab-links-btn" onclick="switchTab('links')"><i class="fa-solid fa-link"></i> Link Manager</button>
       <button class="btn btn-secondary" id="tab-instr-btn" onclick="switchTab('instr')"><i class="fa-solid fa-book"></i> Instructions Editor</button>
+      <button class="btn btn-secondary" id="tab-proofs-btn" onclick="switchTab('proofs')"><i class="fa-solid fa-images"></i> Proofs</button>
     </div>
 
     <!-- Database Info & Auto-Setup Panel -->
@@ -193,6 +194,20 @@
       </div>
     </div>
 
+    <!-- PROOFS MANAGEMENT TAB -->
+    <div id="tab-proofs" style="display:none;">
+      <div class="panel" style="margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+          <div>
+            <h2 class="panel-title" style="margin-bottom:.25rem;"><i class="fa-solid fa-images" style="color:var(--primary)"></i> Submitted Proofs</h2>
+            <p style="color:var(--text-muted);font-size:.82rem;">Review and manage proof submissions from users.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="loadAdminProofs()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+        </div>
+      </div>
+      <div id="admin-proofs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.85rem;"></div>
+    </div>
+
   </div>
 
   <script>
@@ -203,16 +218,15 @@
     function switchTab(tab) {
       const linksEl = document.querySelector('.dash-grid');
       const instrEl = document.getElementById('tab-instr');
-      const lBtn    = document.getElementById('tab-links-btn');
-      const iBtn    = document.getElementById('tab-instr-btn');
-      if (tab === 'links') {
-        linksEl.style.display = ''; instrEl.style.display = 'none';
-        lBtn.className = 'btn btn-primary'; iBtn.className = 'btn btn-secondary';
-      } else {
-        linksEl.style.display = 'none'; instrEl.style.display = 'block';
-        lBtn.className = 'btn btn-secondary'; iBtn.className = 'btn btn-primary';
-        instrRender();
-      }
+      const proofsEl = document.getElementById('tab-proofs');
+      const lBtn = document.getElementById('tab-links-btn');
+      const iBtn = document.getElementById('tab-instr-btn');
+      const pBtn = document.getElementById('tab-proofs-btn');
+      linksEl.style.display = 'none'; instrEl.style.display = 'none'; proofsEl.style.display = 'none';
+      lBtn.className = iBtn.className = pBtn.className = 'btn btn-secondary';
+      if (tab === 'links')  { linksEl.style.display = ''; lBtn.className = 'btn btn-primary'; }
+      if (tab === 'instr')  { instrEl.style.display = 'block'; iBtn.className = 'btn btn-primary'; instrLoadFromDB(); }
+      if (tab === 'proofs') { proofsEl.style.display = 'block'; pBtn.className = 'btn btn-primary'; loadAdminProofs(); }
     }
 
     // Core Init checks
@@ -770,7 +784,72 @@
       });
     }
 
-    function instrSave() { localStorage.setItem('instr_blocks',JSON.stringify(instrBlocks)); }
+    function instrSave() {
+      localStorage.setItem('instr_blocks', JSON.stringify(instrBlocks));
+      // Sync to database
+      fetch('/api/instructions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getAuthToken()}` },
+        body: JSON.stringify({ blocks: instrBlocks })
+      }).catch(e => console.warn('DB sync failed:', e));
+    }
+
+    async function instrLoadFromDB() {
+      try {
+        const r = await fetch('/api/instructions');
+        const data = await r.json();
+        if (Array.isArray(data.blocks)) {
+          instrBlocks = data.blocks;
+          localStorage.setItem('instr_blocks', JSON.stringify(instrBlocks));
+        }
+      } catch(e) { console.warn('instrLoadFromDB failed:', e); }
+      instrRender();
+    }
+
+    // ── Proofs Management ──────────────────────────────────────────────────
+    async function loadAdminProofs() {
+      const grid = document.getElementById('admin-proofs-grid');
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>`;
+      try {
+        const r = await fetch('/api/proofs');
+        const data = await r.json();
+        const proofs = data.proofs || [];
+        if (!proofs.length) {
+          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);"><i class="fa-solid fa-images" style="font-size:2rem;display:block;margin-bottom:.75rem;"></i>No proofs submitted yet.</div>`;
+          return;
+        }
+        grid.innerHTML = proofs.map(p => `
+          <div class="panel" style="padding:0;overflow:hidden;">
+            <img src="${p.image_data}" style="width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:rgba(0,0,0,.3);" loading="lazy">
+            <div style="padding:.75rem;">
+              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary);margin-bottom:.3rem;">✅ ${esc(p.task_name)}</div>
+              ${p.description ? `<div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem;">${esc(p.description)}</div>` : ''}
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.5rem;">
+                <span style="font-size:.7rem;color:var(--text-muted);">${new Date(p.submitted_at).toLocaleDateString()}</span>
+                <button class="btn btn-danger" style="padding:.25rem .6rem;font-size:.75rem;" onclick="deleteProof(${p.id},this)"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </div>`).join('');
+        window._adminProofs = proofs;
+      } catch(e) {
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--error);padding:2rem;">Failed to load proofs.</div>`;
+      }
+    }
+
+    async function deleteProof(id, btn) {
+      if (!confirm('Delete this proof?')) return;
+      btn.disabled = true;
+      try {
+        const r = await fetch(`/api/proofs?id=${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${getAuthToken()}` } });
+        if (!r.ok) throw new Error('Failed');
+        loadAdminProofs();
+      } catch(e) {
+        btn.disabled = false;
+        showAlert('Delete failed: ' + e.message, 'error');
+      }
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     document.getElementById('instr-modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) instrCloseModal(); });
   </script>

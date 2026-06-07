@@ -3,6 +3,8 @@
   "rewrites": [
     { "source": "/api/links", "destination": "/api/links.js" },
     { "source": "/api/setup", "destination": "/api/setup.js" },
+    { "source": "/api/instructions", "destination": "/api/instructions.js" },
+    { "source": "/api/proofs", "destination": "/api/proofs.js" },
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/instructions", "destination": "/instructions.html" },
     { "source": "/styles.css", "destination": "/styles.css" },
