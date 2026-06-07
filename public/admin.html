@@ -43,11 +43,18 @@
           Create, edit, and audit your micro-job bridge redirects globally.
         </p>
       </div>
-      <div style="display: flex; gap: 0.8rem;">
-        <a href="/" class="btn btn-secondary" target="_blank"><i class="fa-solid fa-eye"></i> View Landing Page</a>
+      <div style="display: flex; gap: 0.8rem; flex-wrap:wrap;">
+        <a href="/" class="btn btn-secondary" target="_blank"><i class="fa-solid fa-eye"></i> View Site</a>
+        <a href="/instructions" class="btn btn-secondary" target="_blank"><i class="fa-solid fa-book-open"></i> View Instructions</a>
         <button class="btn btn-secondary" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
       </div>
     </header>
+
+    <!-- Tab Switcher -->
+    <div style="display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:.75rem;">
+      <button class="btn btn-primary" id="tab-links-btn" onclick="switchTab('links')"><i class="fa-solid fa-link"></i> Link Manager</button>
+      <button class="btn btn-secondary" id="tab-instr-btn" onclick="switchTab('instr')"><i class="fa-solid fa-book"></i> Instructions Editor</button>
+    </div>
 
     <!-- Database Info & Auto-Setup Panel -->
     <div class="panel" style="background: rgba(99, 102, 241, 0.04); border-color: rgba(99, 102, 241, 0.15); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.2rem 1.8rem;">
@@ -146,11 +153,66 @@
 
     </div>
 
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- INSTRUCTIONS EDITOR TAB                            -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <div id="tab-instr" style="display:none">
+
+      <div class="panel" style="margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+          <div>
+            <h2 class="panel-title" style="margin-bottom:.25rem;"><i class="fa-solid fa-book" style="color:var(--primary)"></i> Instructions Page Editor</h2>
+            <p style="color:var(--text-muted);font-size:.82rem;">Build the public <code>/instructions</code> page. Drag blocks to reorder.</p>
+          </div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="instrAddBlock('paragraph')"><i class="fa-solid fa-paragraph"></i> Paragraph</button>
+            <button class="btn btn-secondary" onclick="instrAddBlock('steps')"><i class="fa-solid fa-list-ol"></i> Steps</button>
+            <button class="btn btn-secondary" onclick="instrAddBlock('linkbox')"><i class="fa-solid fa-link"></i> Link Box</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="instr-blocks"></div>
+
+      <p style="text-align:center;color:var(--text-muted);font-size:.78rem;margin-top:.75rem;">Changes save automatically to your browser. The public <a href="/instructions" target="_blank" style="color:var(--primary)">/instructions</a> page reads this data.</p>
+    </div>
+
+    <!-- Instructions Block Edit Modal -->
+    <div class="modal-overlay" id="instr-modal" style="display:none;">
+      <div class="modal-content" style="max-width:520px;max-height:85vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+          <h2 id="instr-modal-title" style="font-size:1rem;font-weight:700;">Edit Block</h2>
+          <button onclick="instrCloseModal()" style="background:transparent;border:none;color:var(--text-secondary);font-size:1.2rem;cursor:pointer;">✕</button>
+        </div>
+        <div id="instr-modal-body"></div>
+        <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.25rem;border-top:1px solid rgba(255,255,255,.07);padding-top:1rem;">
+          <button class="btn btn-secondary" onclick="instrCloseModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="instrSaveModal()"><i class="fa-solid fa-save"></i> Save Block</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
     // App Constants
     let activeLinks = [];
+
+    // ── Tab Switcher ──────────────────────────────────────────────────────────
+    function switchTab(tab) {
+      const linksEl = document.querySelector('.dash-grid');
+      const instrEl = document.getElementById('tab-instr');
+      const lBtn    = document.getElementById('tab-links-btn');
+      const iBtn    = document.getElementById('tab-instr-btn');
+      if (tab === 'links') {
+        linksEl.style.display = ''; instrEl.style.display = 'none';
+        lBtn.className = 'btn btn-primary'; iBtn.className = 'btn btn-secondary';
+      } else {
+        linksEl.style.display = 'none'; instrEl.style.display = 'block';
+        lBtn.className = 'btn btn-secondary'; iBtn.className = 'btn btn-primary';
+        instrRender();
+      }
+    }
 
     // Core Init checks
     document.addEventListener('DOMContentLoaded', () => {
@@ -465,6 +527,174 @@
         showAlert(err.message, 'error');
       }
     }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // INSTRUCTIONS EDITOR LOGIC
+    // ══════════════════════════════════════════════════════════════════════
+    let instrBlocks = JSON.parse(localStorage.getItem('instr_blocks') || '[]');
+    let instrEditingId = null;
+    let instrDragSrc = null;
+
+    function instrEsc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function instrRender() {
+      const el = document.getElementById('instr-blocks');
+      if (!instrBlocks.length) {
+        el.innerHTML = `<div class="panel" style="text-align:center;padding:3rem 1rem;color:var(--text-muted);"><i class="fa-solid fa-book-open" style="font-size:2rem;margin-bottom:.75rem;display:block;"></i><p>No blocks yet. Use the buttons above to add content.</p></div>`;
+        return;
+      }
+      el.innerHTML = instrBlocks.map(instrRenderBlock).join('');
+      el.querySelectorAll('.ib-card').forEach(instrAttachDrag);
+    }
+
+    function instrRenderBlock(b) {
+      const toolbar = `<div style="display:flex;align-items:center;gap:.4rem;padding:.4rem .75rem;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06);">
+        <span class="ib-drag" data-id="${b.id}" style="cursor:grab;color:var(--text-muted);font-size:1.1rem;user-select:none;">⠿</span>
+        <span style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);background:rgba(0,0,0,.3);padding:.15rem .45rem;border-radius:99px;flex:1;">${b.type}</span>
+        <button class="btn btn-secondary" style="padding:.25rem .55rem;font-size:.75rem;" onclick="instrEdit('${b.id}')"><i class="fa-solid fa-edit"></i> Edit</button>
+        <button class="btn btn-danger" style="padding:.25rem .55rem;font-size:.75rem;" onclick="instrDelete('${b.id}')"><i class="fa-solid fa-trash"></i></button>
+      </div>`;
+      let body = '';
+      if (b.type === 'paragraph') {
+        body = `<div style="padding:1.1rem 1.3rem;font-size:.9rem;line-height:1.75;white-space:pre-wrap;word-break:break-word;">${instrEsc(b.content||'<em style="color:var(--text-muted)">Empty paragraph – click Edit</em>')}</div>`;
+      } else if (b.type === 'steps') {
+        const steps = (b.steps||[]).map((s,i)=>`<li style="display:flex;align-items:flex-start;gap:.6rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.88rem;">
+          <span style="min-width:1.6rem;height:1.6rem;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;">${i+1}</span>
+          <span style="flex:1;padding-top:.05rem;">${instrEsc(s)}</span></li>`).join('');
+        body = `<div style="padding:1.1rem 1.3rem;">${b.title?`<p style="font-weight:700;margin-bottom:.85rem;">${instrEsc(b.title)}</p>`:''}<ul style="list-style:none;">${steps||'<li style="color:var(--text-muted);font-size:.85rem;">No steps yet.</li>'}</ul></div>`;
+      } else if (b.type === 'linkbox') {
+        const items = (b.items||[]).map(it=>{
+          const isUrl = it.url&&(it.url.startsWith('http')||it.url.startsWith('tg://'));
+          return `<div style="display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.05);">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--primary);flex-shrink:0;"></span>
+            <span style="font-size:.82rem;font-weight:600;min-width:90px;">${instrEsc(it.label||'')}</span>
+            ${isUrl?`<a href="${instrEsc(it.url)}" target="_blank" style="font-size:.78rem;color:var(--primary);word-break:break-all;flex:1;">${instrEsc(it.url)}</a>`:`<span style="font-size:.82rem;color:var(--text-muted);flex:1;">${instrEsc(it.url||'')}</span>`}
+          </div>`;
+        }).join('');
+        body = `<div style="padding:1.1rem 1.3rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;">
+            <strong>🔗 ${instrEsc(b.title||'Links')}</strong>
+            <button onclick="instrCopyBox('${b.id}',this)" style="padding:.3rem .65rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:var(--text-secondary);font-size:.75rem;cursor:pointer;font-family:inherit;">📋 Copy All</button>
+          </div>${items||'<p style="color:var(--text-muted);font-size:.85rem;">No items yet.</p>'}</div>`;
+      }
+      return `<div class="panel ib-card" data-id="${b.id}" draggable="true" style="padding:0;margin-bottom:.75rem;overflow:hidden;">${toolbar}${body}</div>`;
+    }
+
+    function instrAttachDrag(el) {
+      el.addEventListener('dragstart', e => { instrDragSrc=el; el.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
+      el.addEventListener('dragend',   () => { el.style.opacity=''; document.querySelectorAll('.ib-card').forEach(b=>b.style.borderTop=''); });
+      el.addEventListener('dragover',  e => { e.preventDefault(); document.querySelectorAll('.ib-card').forEach(b=>b.style.borderTop=''); if(el!==instrDragSrc) el.style.borderTop='2px solid var(--primary)'; });
+      el.addEventListener('drop', e => {
+        e.preventDefault();
+        if (!instrDragSrc||instrDragSrc===el) return;
+        const si = instrBlocks.findIndex(b=>b.id===instrDragSrc.dataset.id);
+        const di = instrBlocks.findIndex(b=>b.id===el.dataset.id);
+        const [m] = instrBlocks.splice(si,1); instrBlocks.splice(di,0,m);
+        instrSave(); instrRender();
+      });
+    }
+
+    function instrAddBlock(type) {
+      const b = { id:'ib_'+Date.now(), type };
+      if (type==='paragraph') b.content='';
+      if (type==='steps')     { b.title=''; b.steps=['']; }
+      if (type==='linkbox')   { b.title='Links'; b.items=[{label:'',url:''}]; }
+      instrBlocks.push(b);
+      instrSave(); instrRender();
+      instrEdit(b.id);
+    }
+
+    function instrDelete(id) {
+      if (!confirm('Delete this block?')) return;
+      instrBlocks = instrBlocks.filter(b=>b.id!==id);
+      instrSave(); instrRender();
+    }
+
+    function instrEdit(id) {
+      instrEditingId = id;
+      const b = instrBlocks.find(x=>x.id===id);
+      if (!b) return;
+      document.getElementById('instr-modal-title').textContent = {paragraph:'Edit Paragraph',steps:'Edit Steps',linkbox:'Edit Link Box'}[b.type];
+      const body = document.getElementById('instr-modal-body');
+      if (b.type==='paragraph') {
+        body.innerHTML=`<div class="form-group"><label class="form-label">Content</label><textarea id="im-content" class="form-input" rows="6" placeholder="Write instructions here…">${instrEsc(b.content||'')}</textarea></div>`;
+      } else if (b.type==='steps') {
+        body.innerHTML=`<div class="form-group"><label class="form-label">Title (optional)</label><input class="form-input" id="im-title" value="${instrEsc(b.title||'')}"></div>
+          <div class="form-group"><label class="form-label">Steps</label><div id="im-rows" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.6rem;"></div>
+          <button type="button" onclick="instrAddStepRow()" class="btn btn-secondary" style="width:100%;font-size:.82rem;">+ Add Step</button></div>`;
+        (b.steps||[]).forEach(s=>instrAppendStepRow(s));
+      } else if (b.type==='linkbox') {
+        body.innerHTML=`<div class="form-group"><label class="form-label">Box Title</label><input class="form-input" id="im-title" value="${instrEsc(b.title||'')}"></div>
+          <div class="form-group"><label class="form-label">Items</label><div id="im-lrows" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.6rem;"></div>
+          <button type="button" onclick="instrAddLinkRow()" class="btn btn-secondary" style="width:100%;font-size:.82rem;">+ Add Item</button></div>`;
+        (b.items||[]).forEach(it=>instrAppendLinkRow(it.label,it.url));
+      }
+      document.getElementById('instr-modal').style.display='flex';
+    }
+
+    function instrAppendStepRow(val='') {
+      const rows=document.getElementById('im-rows');
+      const n=rows.children.length+1;
+      const d=document.createElement('div'); d.style='display:flex;align-items:center;gap:.4rem;';
+      d.innerHTML=`<span style="font-size:.72rem;color:var(--text-muted);min-width:1.4rem;text-align:center;">${n}</span>
+        <input class="form-input" style="flex:1;padding:.45rem .65rem;font-size:.85rem;" value="${instrEsc(val)}" placeholder="Step ${n}…">
+        <button type="button" onclick="this.parentElement.remove();instrRenum()" style="background:transparent;border:none;color:var(--error);cursor:pointer;font-size:.95rem;">✕</button>`;
+      rows.appendChild(d);
+    }
+    function instrAddStepRow() { instrAppendStepRow(); instrRenum(); }
+    function instrRenum() {
+      document.querySelectorAll('#im-rows > div').forEach((r,i)=>{
+        r.querySelector('span').textContent=i+1;
+        r.querySelector('input').placeholder=`Step ${i+1}…`;
+      });
+    }
+
+    function instrAppendLinkRow(label='',url='') {
+      const rows=document.getElementById('im-lrows');
+      const d=document.createElement('div'); d.style='background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.65rem;display:flex;flex-direction:column;gap:.35rem;position:relative;';
+      d.innerHTML=`<input class="form-input" placeholder="Label (e.g. Bot Link)" style="padding:.42rem .65rem;font-size:.82rem;" value="${instrEsc(label)}">
+        <input class="form-input" placeholder="URL or text (e.g. https://t.me/…)" style="padding:.42rem .65rem;font-size:.82rem;" value="${instrEsc(url)}">
+        <button type="button" onclick="this.parentElement.remove()" style="position:absolute;top:.4rem;right:.4rem;background:transparent;border:none;color:var(--error);cursor:pointer;opacity:.6;font-size:.85rem;">✕</button>`;
+      rows.appendChild(d);
+    }
+    function instrAddLinkRow() { instrAppendLinkRow(); }
+
+    function instrSaveModal() {
+      const b=instrBlocks.find(x=>x.id===instrEditingId); if(!b) return;
+      if (b.type==='paragraph') {
+        b.content=document.getElementById('im-content').value;
+      } else if (b.type==='steps') {
+        b.title=document.getElementById('im-title').value;
+        b.steps=[...document.querySelectorAll('#im-rows input')].map(i=>i.value).filter(v=>v.trim());
+      } else if (b.type==='linkbox') {
+        b.title=document.getElementById('im-title').value;
+        b.items=[...document.querySelectorAll('#im-lrows > div')].map(row=>{
+          const ins=row.querySelectorAll('input'); return {label:ins[0].value,url:ins[1].value};
+        }).filter(it=>it.label||it.url);
+      }
+      instrSave(); instrRender(); instrCloseModal();
+    }
+
+    function instrCloseModal() {
+      document.getElementById('instr-modal').style.display='none';
+      instrEditingId=null;
+    }
+
+    function instrCopyBox(id,btn) {
+      const b=instrBlocks.find(x=>x.id===id); if(!b||b.type!=='linkbox') return;
+      const lines=[`📌 ${b.title||'Links'}`,''];
+      (b.items||[]).forEach(it=>{ if(it.label&&it.url) lines.push(`${it.label}\n${it.url}`); else lines.push(it.url||it.label); lines.push(''); });
+      navigator.clipboard.writeText(lines.join('\n').trim()).then(()=>{
+        const orig=btn.textContent; btn.textContent='✅ Copied!'; btn.style.color='var(--success)';
+        setTimeout(()=>{ btn.textContent=orig; btn.style.color=''; },2000);
+      });
+    }
+
+    function instrSave() { localStorage.setItem('instr_blocks',JSON.stringify(instrBlocks)); }
+
+    document.getElementById('instr-modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) instrCloseModal(); });
   </script>
 </body>
 </html>

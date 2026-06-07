@@ -30,6 +30,22 @@
       <div class="skeleton-card" style="animation-delay: 0.4s"></div>
     </main>
 
+    <!-- Instructions Preview Card -->
+    <div id="instr-preview" style="display:none;margin-top:.5rem;">
+      <a href="/instructions" class="link-card" style="background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(42,171,238,.08));border-color:rgba(99,102,241,.25);">
+        <div class="link-card-left">
+          <span class="link-icon"><i class="fa-solid fa-book-open" style="color:#818cf8;"></i></span>
+          <div class="link-text-content">
+            <span class="link-title">Instructions</span>
+            <p class="link-description" id="instr-preview-desc">How to get started &amp; important links</p>
+          </div>
+        </div>
+        <div class="link-card-right">
+          <span class="link-arrow"><i class="fa-solid fa-chevron-right"></i></span>
+        </div>
+      </a>
+    </div>
+
     <!-- Social Bottom Icons -->
     <footer class="social-row">
       <a href="#" class="social-icon-btn" title="Telegram" id="footer-tg" style="display: none;"><i class="fab fa-telegram"></i></a>
@@ -264,8 +280,27 @@
       });
     }
 
+    // Show Instructions card if content exists
+    function initInstructionsCard() {
+      try {
+        const blocks = JSON.parse(localStorage.getItem('instr_blocks') || '[]');
+        if (blocks.length > 0) {
+          document.getElementById('instr-preview').style.display = 'block';
+          // Find first paragraph/steps block for a preview description
+          const first = blocks.find(b => b.type === 'paragraph' && b.content) ||
+                        blocks.find(b => b.type === 'steps' && b.title);
+          if (first) {
+            const desc = first.type === 'paragraph'
+              ? first.content.slice(0, 80).replace(/\n/g,' ') + (first.content.length > 80 ? '…' : '')
+              : first.title;
+            if (desc) document.getElementById('instr-preview-desc').textContent = desc;
+          }
+        }
+      } catch(e) {}
+    }
+
     // Initialize Page
-    document.addEventListener('DOMContentLoaded', loadLinks);
+    document.addEventListener('DOMContentLoaded', () => { loadLinks(); initInstructionsCard(); });
   </script>
 </body>
 </html>
