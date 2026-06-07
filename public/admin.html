@@ -168,6 +168,7 @@
             <button class="btn btn-secondary" onclick="instrAddBlock('paragraph')"><i class="fa-solid fa-paragraph"></i> Paragraph</button>
             <button class="btn btn-secondary" onclick="instrAddBlock('steps')"><i class="fa-solid fa-list-ol"></i> Steps</button>
             <button class="btn btn-secondary" onclick="instrAddBlock('linkbox')"><i class="fa-solid fa-link"></i> Link Box</button>
+            <button class="btn btn-secondary" onclick="instrAddBlock('image')"><i class="fa-solid fa-image"></i> Image</button>
           </div>
         </div>
       </div>
@@ -578,6 +579,16 @@
             <strong>🔗 ${instrEsc(b.title||'Links')}</strong>
             <button onclick="instrCopyBox('${b.id}',this)" style="padding:.3rem .65rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:var(--text-secondary);font-size:.75rem;cursor:pointer;font-family:inherit;">📋 Copy All</button>
           </div>${items||'<p style="color:var(--text-muted);font-size:.85rem;">No items yet.</p>'}</div>`;
+      } else if (b.type === 'image') {
+        const alignMap = {left:'flex-start',center:'center',right:'flex-end'};
+        const justify = alignMap[b.align||'center']||'center';
+        const imgHtml = b.src
+          ? `<img src="${b.src}" alt="${instrEsc(b.caption||'')}" style="max-width:100%;border-radius:10px;display:block;">`
+          : `<div style="width:100%;height:140px;border:2px dashed rgba(255,255,255,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.85rem;"><i class="fa-solid fa-image" style="margin-right:.4rem;"></i>No image – click Edit</div>`;
+        body = `<div style="padding:1.1rem 1.3rem;">
+          <div style="display:flex;justify-content:${justify};">${imgHtml}</div>
+          ${b.caption?`<p style="text-align:${b.align||'center'};font-size:.8rem;color:var(--text-muted);margin-top:.6rem;font-style:italic;">${instrEsc(b.caption)}</p>`:''}
+        </div>`;
       }
       return `<div class="panel ib-card" data-id="${b.id}" draggable="true" style="padding:0;margin-bottom:.75rem;overflow:hidden;">${toolbar}${body}</div>`;
     }
@@ -601,6 +612,7 @@
       if (type==='paragraph') b.content='';
       if (type==='steps')     { b.title=''; b.steps=['']; }
       if (type==='linkbox')   { b.title='Links'; b.items=[{label:'',url:''}]; }
+      if (type==='image')     { b.src=''; b.caption=''; b.align='center'; }
       instrBlocks.push(b);
       instrSave(); instrRender();
       instrEdit(b.id);
@@ -616,7 +628,8 @@
       instrEditingId = id;
       const b = instrBlocks.find(x=>x.id===id);
       if (!b) return;
-      document.getElementById('instr-modal-title').textContent = {paragraph:'Edit Paragraph',steps:'Edit Steps',linkbox:'Edit Link Box'}[b.type];
+      const titles = {paragraph:'Edit Paragraph',steps:'Edit Steps',linkbox:'Edit Link Box',image:'Edit Image'};
+      document.getElementById('instr-modal-title').textContent = titles[b.type]||'Edit Block';
       const body = document.getElementById('instr-modal-body');
       if (b.type==='paragraph') {
         body.innerHTML=`<div class="form-group"><label class="form-label">Content</label><textarea id="im-content" class="form-input" rows="6" placeholder="Write instructions here…">${instrEsc(b.content||'')}</textarea></div>`;
@@ -630,6 +643,33 @@
           <div class="form-group"><label class="form-label">Items</label><div id="im-lrows" style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:.6rem;"></div>
           <button type="button" onclick="instrAddLinkRow()" class="btn btn-secondary" style="width:100%;font-size:.82rem;">+ Add Item</button></div>`;
         (b.items||[]).forEach(it=>instrAppendLinkRow(it.label,it.url));
+      } else if (b.type==='image') {
+        body.innerHTML=`
+          <div class="form-group">
+            <label class="form-label">Upload Image (from device)</label>
+            <input type="file" id="im-file" accept="image/*" class="form-input" style="padding:.5rem;cursor:pointer;" onchange="instrLoadImageFile(this)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">— or — Paste Image URL</label>
+            <input class="form-input" id="im-src" placeholder="https://example.com/image.jpg" value="${instrEsc(b.src||'')}" oninput="instrPreviewImg(this.value)">
+          </div>
+          <div id="im-img-preview" style="margin-bottom:.85rem;border-radius:10px;overflow:hidden;background:rgba(0,0,0,.3);min-height:60px;display:flex;align-items:center;justify-content:center;">
+            ${b.src?`<img src="${instrEsc(b.src)}" style="max-width:100%;max-height:220px;display:block;">` : '<span style="color:var(--text-muted);font-size:.82rem;">Preview will appear here</span>'}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Caption (optional)</label>
+            <input class="form-input" id="im-caption" placeholder="e.g. Step 1 screenshot" value="${instrEsc(b.caption||'')}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Alignment</label>
+            <div style="display:flex;gap:.5rem;">
+              <button type="button" id="align-left"   onclick="instrSetAlign('left'   ,this)" class="btn ${(b.align||'center')==='left'   ?'btn-primary':'btn-secondary'}" style="flex:1;font-size:.8rem;"><i class="fa-solid fa-align-left"></i> Left</button>
+              <button type="button" id="align-center" onclick="instrSetAlign('center' ,this)" class="btn ${(b.align||'center')==='center' ?'btn-primary':'btn-secondary'}" style="flex:1;font-size:.8rem;"><i class="fa-solid fa-align-center"></i> Center</button>
+              <button type="button" id="align-right"  onclick="instrSetAlign('right'  ,this)" class="btn ${(b.align||'center')==='right'  ?'btn-primary':'btn-secondary'}" style="flex:1;font-size:.8rem;"><i class="fa-solid fa-align-right"></i> Right</button>
+            </div>
+          </div>`;
+        window._instrImgAlign = b.align||'center';
+        window._instrImgSrc   = b.src||'';
       }
       document.getElementById('instr-modal').style.display='flex';
     }
@@ -673,8 +713,46 @@
         b.items=[...document.querySelectorAll('#im-lrows > div')].map(row=>{
           const ins=row.querySelectorAll('input'); return {label:ins[0].value,url:ins[1].value};
         }).filter(it=>it.label||it.url);
+      } else if (b.type==='image') {
+        // Prefer uploaded base64 over typed URL
+        b.src     = window._instrImgSrc || document.getElementById('im-src').value.trim();
+        b.caption = document.getElementById('im-caption').value.trim();
+        b.align   = window._instrImgAlign || 'center';
       }
       instrSave(); instrRender(); instrCloseModal();
+    }
+
+    // Image helper: load local file as base64
+    function instrLoadImageFile(input) {
+      const file = input.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        window._instrImgSrc = e.target.result;
+        document.getElementById('im-src').value = '';
+        const prev = document.getElementById('im-img-preview');
+        prev.innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:220px;display:block;">`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Image helper: live URL preview
+    function instrPreviewImg(url) {
+      window._instrImgSrc = url;
+      const prev = document.getElementById('im-img-preview');
+      if (url) {
+        prev.innerHTML = `<img src="${url}" style="max-width:100%;max-height:220px;display:block;" onerror="this.parentElement.innerHTML='<span style=color:var(--error);font-size:.82rem>Could not load image</span>'">`;
+      } else {
+        prev.innerHTML = '<span style="color:var(--text-muted);font-size:.82rem;">Preview will appear here</span>';
+      }
+    }
+
+    // Image helper: alignment toggle
+    function instrSetAlign(val, btn) {
+      window._instrImgAlign = val;
+      ['left','center','right'].forEach(a => {
+        const el = document.getElementById('align-'+a);
+        if (el) el.className = 'btn ' + (a===val ? 'btn-primary' : 'btn-secondary');
+      });
     }
 
     function instrCloseModal() {

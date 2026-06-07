@@ -191,6 +191,16 @@ function renderBlock(b) {
       </li>`).join('');
     body = `<div class="bdy">${b.title?`<div class="blk-title">${esc(b.title)}</div>`:''}
       <ul class="steps-ul">${steps||'<li style="color:var(--muted);font-size:.85rem;padding:.5rem 0">No steps yet.</li>'}</ul></div>`;
+  } else if (b.type === 'image') {
+    const alignMap = {left:'flex-start',center:'center',right:'flex-end'};
+    const justify = alignMap[b.align||'center']||'center';
+    const imgHtml = b.src
+      ? `<img src="${b.src}" alt="${esc(b.caption||'')}" style="max-width:100%;border-radius:10px;display:block;">`
+      : `<div style="height:80px;border:2px dashed #2a3050;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.85rem;">No image</div>`;
+    body = `<div class="bdy">
+      <div style="display:flex;justify-content:${justify};">${imgHtml}</div>
+      ${b.caption?`<p style="text-align:${b.align||'center'};font-size:.8rem;color:var(--muted);margin-top:.6rem;font-style:italic;">${esc(b.caption)}</p>`:''}
+    </div>`;
   } else if (b.type === 'linkbox') {
     const items = (b.items||[]).map(it => {
       const isUrl = it.url && (it.url.startsWith('http')||it.url.startsWith('tg://'));
