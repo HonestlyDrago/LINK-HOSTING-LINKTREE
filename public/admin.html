@@ -846,7 +846,7 @@
         grid.innerHTML = proofs.map(p => `
           <div class="panel" style="padding:0;overflow:hidden;">
             ${p.image_data
-              ? `<img src="${p.image_data}" style="width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:rgba(0,0,0,.3);" loading="lazy">`
+              ? `<img src="${p.image_data}" style="width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:rgba(0,0,0,.3);cursor:pointer;" loading="lazy" onclick="showFullImage(this.src)">`
               : `<div style="width:100%;height:72px;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.8rem;"><i class="fa-solid fa-font" style="margin-right:.4rem;"></i>Text only</div>`}
             <div style="padding:.75rem;">
               <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--primary);margin-bottom:.3rem;">✅ ${esc(p.task_name)}</div>
@@ -879,6 +879,24 @@
 
 
     document.getElementById('instr-modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) instrCloseModal(); });
+
+    // --- Image Viewer Modal ---
+    function showFullImage(src) {
+      const modal = document.getElementById('image-viewer-modal');
+      const img = document.getElementById('image-viewer-img');
+      img.src = src;
+      modal.style.display = 'flex';
+    }
+    function hideFullImage() {
+      document.getElementById('image-viewer-modal').style.display = 'none';
+      document.getElementById('image-viewer-img').src = '';
+    }
   </script>
+
+  <!-- Fullscreen Image Viewer -->
+  <div id="image-viewer-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;padding:1rem;" onclick="hideFullImage()">
+    <button style="position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:50%;width:40px;height:40px;font-size:1.5rem;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="hideFullImage()">✕</button>
+    <img id="image-viewer-img" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;" onclick="event.stopPropagation()">
+  </div>
 </body>
 </html>
