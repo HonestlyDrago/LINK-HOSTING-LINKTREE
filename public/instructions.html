@@ -198,7 +198,7 @@ function renderBlock(b) {
       <div class="pb-title">📸 ${esc(b.title||'Submit Proof')}</div>
       <input type="text" id="pb_desc_${b.id}" class="pb-input" placeholder="Your username or description (optional)" maxlength="500">
       ${hasImg ? `<input type="file" id="pb_img_${b.id}" class="pb-file" accept="image/*">` : ''}
-      <button class="pb-btn" id="pb_btn_${b.id}" onclick="submitProofBlock('${b.id}', '${esc(b.title||'Submit Proof').replace(/'/g, "\\'")}', '${b.mode}')">📤 Submit Proof</button>
+      <button class="pb-btn" id="pb_btn_${b.id}" onclick="submitProofBlock('${b.id}', '${esc(b.title||'Submit Proof').replace(/'/g, "\\'")}', '${b.mode||'text_only'}')">📤 Submit Proof</button>
       <div class="pb-msg" id="pb_msg_${b.id}"></div>
     </div></div>`;
   }
@@ -246,15 +246,22 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 // ── Proof Block Submissions ─────────────────────────────────────────────────
 async function submitProofBlock(id, taskName, mode) {
   const descEl = document.getElementById('pb_desc_'+id);
-  const imgEl = document.getElementById('pb_img_'+id);
-  const btn = document.getElementById('pb_btn_'+id);
-  const msg = document.getElementById('pb_msg_'+id);
-  
+  const imgEl  = document.getElementById('pb_img_'+id);
+  const btn    = document.getElementById('pb_btn_'+id);
+  const msg    = document.getElementById('pb_msg_'+id);
+
+  const effectiveMode = (mode && mode !== 'undefined') ? mode : 'text_only';
   const desc = descEl ? descEl.value.trim() : '';
   msg.className = 'pb-msg'; msg.textContent = '';
-  
-  const file = mode === 'image_and_text' && imgEl ? imgEl.files[0] : null;
-  if (mode === 'image_and_text' && !file) {
+
+  if (effectiveMode === 'text_only') {
+    if (!desc) {
+      msg.className = 'pb-msg err'; msg.textContent = '⚠️ Please enter a description.'; return;
+    }
+  }
+
+  const file = effectiveMode === 'image_and_text' && imgEl ? imgEl.files[0] : null;
+  if (effectiveMode === 'image_and_text' && !file) {
     msg.className = 'pb-msg err'; msg.textContent = '⚠️ Please select a screenshot.'; return;
   }
   
