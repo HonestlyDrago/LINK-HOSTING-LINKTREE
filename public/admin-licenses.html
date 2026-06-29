@@ -153,17 +153,17 @@
           const row = document.createElement('tr');
           const d = new Date(lic.created_at);
           
-          row.innerHTML = \`
-            <td><span class="slug-badge">#\${lic.id}</span></td>
-            <td><strong>\${escapeHtml(lic.pump_name)}</strong></td>
-            <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">\${escapeHtml(lic.hardware_id)}</td>
-            <td style="color: var(--text-secondary); font-size: 0.9rem;">\${d.toLocaleString()}</td>
-          \`;
+          row.innerHTML = `
+            <td><span class="slug-badge">#${lic.id}</span></td>
+            <td><strong>${escapeHtml(lic.pump_name)}</strong></td>
+            <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${escapeHtml(lic.hardware_id)}</td>
+            <td style="color: var(--text-secondary); font-size: 0.9rem;">${d.toLocaleString()}</td>
+          `;
           tbody.appendChild(row);
         });
 
       } catch (err) {
-        tbody.innerHTML = \`<tr><td colspan="4" class="empty-state"><div class="empty-icon" style="color:var(--error)"><i class="fa-solid fa-triangle-exclamation"></i></div><p>\${err.message}</p></td></tr>\`;
+        tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><div class="empty-icon" style="color:var(--error)"><i class="fa-solid fa-triangle-exclamation"></i></div><p>${err.message}</p></td></tr>`;
       }
     }
 
