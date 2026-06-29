@@ -7,6 +7,7 @@
     { "source": "/api/proofs", "destination": "/api/proofs.js" },
     { "source": "/api/generate-license", "destination": "/api/generate-license.js" },
     { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/licenses", "destination": "/admin-licenses.html" },
     { "source": "/instructions", "destination": "/instructions.html" },
     { "source": "/license", "destination": "/license.html" },
     { "source": "/styles.css", "destination": "/styles.css" },
