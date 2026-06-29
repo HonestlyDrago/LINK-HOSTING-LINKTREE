@@ -25,3 +25,7 @@ logs
 *.log
 .DS_Store
 Thumbs.db
+
+# 🔑 Cryptographic Keys
+*.pem
+*.key

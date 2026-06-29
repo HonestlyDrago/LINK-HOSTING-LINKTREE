@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>License Generator</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    body {
+      background-color: #0f1117;
+      color: #e0e6f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #1a1f2e;
+      border: 1px solid #2a3050;
+      border-radius: 12px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #a0aec0;
+    }
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 8px;
+      border: 1px solid #2a3050;
+      background: #111520;
+      color: white;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    input:focus {
+      outline: none;
+      border-color: #2AABEE;
+    }
+    button {
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, #2AABEE, #229ED9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 0.5rem;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .error {
+      margin-top: 1rem;
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    .result {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      background: rgba(42, 171, 238, 0.1);
+      border: 1px solid rgba(42, 171, 238, 0.2);
+      border-radius: 8px;
+    }
+    .result p {
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+      color: #2AABEE;
+    }
+    .result pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .result code {
+      font-size: 0.9rem;
+      font-family: monospace;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>License Generator</h2>
+    <form id="licenseForm">
+      <div class="form-group">
+        <label for="pumpName">Pump Name</label>
+        <input type="text" id="pumpName" placeholder="e.g., PUMP-001" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="clientId">Client / Hardware ID</label>
+        <input type="text" id="clientId" placeholder="Enter Hardware ID here..." required>
+      </div>
+      
+      <button type="submit" id="submitBtn">Generate License Key</button>
+    </form>
+
+    <div id="errorContainer" class="error" style="display: none;"></div>
+    
+    <div id="resultContainer" class="result" style="display: none;">
+      <p>Generated License Key (save this as LICENSE.key):</p>
+      <pre><code id="licenseOutput"></code></pre>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('licenseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const pumpName = document.getElementById('pumpName').value.trim();
+      const clientId = document.getElementById('clientId').value.trim();
+      const submitBtn = document.getElementById('submitBtn');
+      const errorContainer = document.getElementById('errorContainer');
+      const resultContainer = document.getElementById('resultContainer');
+      const licenseOutput = document.getElementById('licenseOutput');
+      
+      // Reset UI
+      errorContainer.style.display = 'none';
+      resultContainer.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Generating...';
+      
+      try {
+        const response = await fetch('/api/generate-license', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id: clientId, pump: pumpName }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to generate license');
+        }
+        
+        licenseOutput.textContent = data.licenseKey;
+        resultContainer.style.display = 'block';
+      } catch (err) {
+        errorContainer.textContent = 'Error: ' + err.message;
+        errorContainer.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Generate License Key';
+      }
+    });
+  </script>
+</body>
+</html>
