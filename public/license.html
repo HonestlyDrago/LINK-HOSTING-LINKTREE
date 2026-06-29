@@ -129,6 +129,7 @@
     <div id="resultContainer" class="result" style="display: none;">
       <p>Generated License Key (save this as LICENSE.key):</p>
       <pre><code id="licenseOutput"></code></pre>
+      <button type="button" id="downloadBtn" style="margin-top: 1rem; background: linear-gradient(135deg, #10b981, #059669);"><i class="fa-solid fa-download"></i> Download LICENSE.key Again</button>
     </div>
   </div>
 
@@ -166,6 +167,14 @@
         
         licenseOutput.textContent = data.licenseKey;
         resultContainer.style.display = 'block';
+        
+        // Setup manual download button
+        const downloadBtn = document.getElementById('downloadBtn');
+        downloadBtn.onclick = () => triggerDownload(data.licenseKey);
+        
+        // Trigger download automatically
+        triggerDownload(data.licenseKey);
+        
       } catch (err) {
         errorContainer.textContent = 'Error: ' + err.message;
         errorContainer.style.display = 'block';
@@ -174,6 +183,18 @@
         submitBtn.textContent = 'Generate License Key';
       }
     });
+
+    function triggerDownload(content) {
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'LICENSE.key';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   </script>
 </body>
 </html>
